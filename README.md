@@ -5,7 +5,7 @@ A multi-purpose cryptographic proof server with pluggable trie implementations f
 ## Prerequisites
 
 - Java 21+
-- PostgreSQL 12+ (for production) or H2 (for development)
+- PostgreSQL (for production) or H2 (for development)
 
 ## Build
 
