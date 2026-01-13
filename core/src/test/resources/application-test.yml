@@ -1,0 +1,27 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    database-platform: org.hibernate.dialect.H2Dialect
+    show-sql: false
+  flyway:
+    enabled: false
+
+proof-server:
+  storage:
+    rocksdb-path: ${java.io.tmpdir}/proof-server-test/rocksdb
+    cache-size-mb: 64
+  cache:
+    max-active-tries: 10
+    ttl-minutes: 5
+  default-trie-type: mpf
+
+logging:
+  level:
+    com.bloxbean.cardano.proofserver: DEBUG
+    org.springframework.web: INFO

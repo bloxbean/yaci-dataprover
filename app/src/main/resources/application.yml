@@ -1,0 +1,60 @@
+spring:
+  application:
+    name: proof-server
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:proofserver}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      pool-name: ProofServerPool
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 0
+    locations: classpath:db/migration
+
+server:
+  port: 8080
+
+proof-server:
+  storage:
+    rocksdb-path: ${ROCKSDB_PATH:./data/rocksdb}
+    cache-size-mb: 512
+    write-buffer-size-mb: 128
+    compression: LZ4
+    max-open-files: 1000
+    create-if-missing: true
+  default-trie-type: mpf
+  cache:
+    max-active-tries: 50
+    eviction-policy: LRU
+    ttl-minutes: 60
+  retention:
+    max-tries: 100
+    archive-policy: oldest-first
+    auto-archive-threshold: 90
+  plugins:
+    path: ${PLUGINS_PATH:./plugins}
+    providers:
+      epoch-stake:
+        jdbc-url: jdbc:postgresql://${EPOCH_STAKE_DB_HOST:localhost}:5432/${EPOCH_STAKE_DB_NAME:yaci}
+        username: ${EPOCH_STAKE_DB_USER:yaci}
+        password: ${EPOCH_STAKE_DB_PASSWORD:yaci}
+
+logging:
+  level:
+    com.bloxbean.cardano: INFO
+    org.springframework: INFO

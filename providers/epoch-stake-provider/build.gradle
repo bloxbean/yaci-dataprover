@@ -1,0 +1,51 @@
+plugins {
+    id 'java-library'
+    id 'com.gradleup.shadow' version '8.3.5'
+    id 'io.spring.dependency-management'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.boot:spring-boot-dependencies:${springBootVersion}"
+    }
+}
+
+dependencies {
+    // Core interfaces - compile only (not bundled in fat JAR)
+    compileOnly project(':core')
+
+    // Cardano Client Library
+    implementation "com.bloxbean.cardano:cardano-client-lib:${cardanoClientVersion}"
+
+    // Database
+    implementation "org.postgresql:postgresql:${postgresqlVersion}"
+    implementation 'com.zaxxer:HikariCP:6.2.1'
+
+    // CBOR
+    implementation 'co.nstant.in:cbor:0.9'
+
+    // Logging
+    implementation 'org.slf4j:slf4j-api:2.0.16'
+
+    // Testing
+    testImplementation project(':core')
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.11.4'
+}
+
+shadowJar {
+    archiveBaseName = 'epoch-stake-provider'
+    archiveClassifier = ''
+
+    dependencies {
+        exclude(project(':core'))
+    }
+
+    mergeServiceFiles()
+}
+
+jar {
+    enabled = false
+}
+
+build.dependsOn shadowJar

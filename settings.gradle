@@ -1,0 +1,6 @@
+rootProject.name = 'yaci-proof-server'
+
+include 'core'
+include 'spring-boot-starter'
+include 'app'
+include 'providers:epoch-stake-provider'

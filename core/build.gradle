@@ -1,0 +1,48 @@
+plugins {
+    id 'java-library'
+    id 'org.springframework.boot'
+    id 'io.spring.dependency-management'
+}
+
+// Don't create bootJar for library module
+bootJar {
+    enabled = false
+}
+
+jar {
+    enabled = true
+    archiveBaseName = "${rootProject.name}-core"
+}
+
+dependencies {
+    // Spring Boot Web
+    api 'org.springframework.boot:spring-boot-starter-web'
+    api 'org.springframework.boot:spring-boot-starter-data-jpa'
+    api 'org.springframework.boot:spring-boot-starter-validation'
+
+    // Flyway
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.flywaydb:flyway-database-postgresql'
+
+    // Cardano Client Library
+    api "com.bloxbean.cardano:cardano-client-lib:${cardanoClientVersion}"
+    api "com.bloxbean.cardano:cardano-client-merkle-patricia-trie-rocksdb:${cardanoClientVersion}"
+
+    // RocksDB
+    api "org.rocksdb:rocksdbjni:${rocksdbVersion}"
+
+    // CBOR
+    implementation 'co.nstant.in:cbor:0.9'
+
+    // Utilities
+    implementation 'org.apache.commons:commons-lang3:3.17.0'
+    implementation 'com.google.guava:guava:33.3.1-jre'
+
+    // Testing
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.testcontainers:postgresql:1.20.4'
+    testImplementation 'org.testcontainers:junit-jupiter:1.20.4'
+    testRuntimeOnly 'org.postgresql:postgresql'
+    testRuntimeOnly 'com.h2database:h2'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}

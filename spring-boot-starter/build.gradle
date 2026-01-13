@@ -1,0 +1,24 @@
+plugins {
+    id 'java-library'
+    id 'org.springframework.boot'
+    id 'io.spring.dependency-management'
+}
+
+// Don't create bootJar for library module
+bootJar {
+    enabled = false
+}
+
+jar {
+    enabled = true
+    archiveBaseName = "${rootProject.name}-spring-boot-starter"
+}
+
+dependencies {
+    api project(':core')
+
+    implementation 'org.springframework.boot:spring-boot-starter'
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
