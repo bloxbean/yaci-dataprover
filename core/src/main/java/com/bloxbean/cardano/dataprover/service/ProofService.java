@@ -4,6 +4,7 @@ import com.bloxbean.cardano.dataprover.dto.ProofGenerationRequest;
 import com.bloxbean.cardano.dataprover.dto.ProofGenerationResponse;
 import com.bloxbean.cardano.dataprover.dto.ProofVerificationRequest;
 import com.bloxbean.cardano.dataprover.dto.ProofVerificationResponse;
+import com.bloxbean.cardano.dataprover.dto.ValueLookupResponse;
 import com.bloxbean.cardano.dataprover.exception.ProofGenerationException;
 import com.bloxbean.cardano.dataprover.exception.MerkleNotFoundException;
 import com.bloxbean.cardano.dataprover.service.merkle.MerkleImplementation;
@@ -173,5 +174,76 @@ public class ProofService {
         log.debug("Root hash for merkle {}: {}", merkleIdentifier, rootHashHex);
 
         return rootHashHex;
+    }
+
+    public ValueLookupResponse getValue(String merkleIdentifier, String hexKey) {
+        log.debug("Looking up value for key {} in merkle {}", hexKey, merkleIdentifier);
+
+        MerkleImplementation merkle = merkleRegistry.getOrLoadMerkle(merkleIdentifier);
+        if (merkle == null) {
+            throw new MerkleNotFoundException(merkleIdentifier);
+        }
+
+        try {
+            String normalizedKey = normalizeHexKey(hexKey);
+            byte[] keyBytes = HEX.parseHex(normalizedKey);
+
+            Optional<byte[]> valueOpt = merkle.get(keyBytes);
+
+            if (valueOpt.isPresent()) {
+                String valueHex = HEX.formatHex(valueOpt.get());
+                log.debug("Found value for key {} in merkle {}", hexKey, merkleIdentifier);
+
+                return ValueLookupResponse.builder()
+                        .key(hexKey)
+                        .value(valueHex)
+                        .found(true)
+                        .build();
+            } else {
+                log.debug("Key {} not found in merkle {}", hexKey, merkleIdentifier);
+
+                return ValueLookupResponse.builder()
+                        .key(hexKey)
+                        .value(null)
+                        .found(false)
+                        .build();
+            }
+
+        } catch (IllegalArgumentException e) {
+            throw new ProofGenerationException("Invalid hex key: " + hexKey, e);
+        }
+    }
+
+    public List<ValueLookupResponse> getValues(String merkleIdentifier, List<String> hexKeys) {
+        log.info("Looking up {} keys in merkle {}", hexKeys.size(), merkleIdentifier);
+
+        List<ValueLookupResponse> responses = new ArrayList<>();
+
+        for (String hexKey : hexKeys) {
+            try {
+                ValueLookupResponse response = getValue(merkleIdentifier, hexKey);
+                responses.add(response);
+            } catch (Exception e) {
+                log.warn("Failed to lookup value for key {} in merkle {}: {}",
+                        hexKey, merkleIdentifier, e.getMessage());
+
+                responses.add(ValueLookupResponse.builder()
+                        .key(hexKey)
+                        .value(null)
+                        .found(false)
+                        .build());
+            }
+        }
+
+        log.info("Looked up {} keys in merkle {}", responses.size(), merkleIdentifier);
+
+        return responses;
+    }
+
+    private String normalizeHexKey(String hexKey) {
+        if (hexKey != null && hexKey.startsWith("0x")) {
+            return hexKey.substring(2);
+        }
+        return hexKey;
     }
 }

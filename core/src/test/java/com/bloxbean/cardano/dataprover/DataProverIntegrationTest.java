@@ -1,6 +1,20 @@
 package com.bloxbean.cardano.dataprover;
 
-import com.bloxbean.cardano.dataprover.dto.*;
+import com.bloxbean.cardano.dataprover.dto.AddEntriesRequest;
+import com.bloxbean.cardano.dataprover.dto.AddEntriesResponse;
+import com.bloxbean.cardano.dataprover.dto.BatchValueLookupRequest;
+import com.bloxbean.cardano.dataprover.dto.BatchValueLookupResponse;
+import com.bloxbean.cardano.dataprover.dto.CreateMerkleRequest;
+import com.bloxbean.cardano.dataprover.dto.EntryItem;
+import com.bloxbean.cardano.dataprover.dto.ErrorResponse;
+import com.bloxbean.cardano.dataprover.dto.IngestRequest;
+import com.bloxbean.cardano.dataprover.dto.IngestResponse;
+import com.bloxbean.cardano.dataprover.dto.MerkleResponse;
+import com.bloxbean.cardano.dataprover.dto.ProofGenerationRequest;
+import com.bloxbean.cardano.dataprover.dto.ProofGenerationResponse;
+import com.bloxbean.cardano.dataprover.dto.ProofVerificationRequest;
+import com.bloxbean.cardano.dataprover.dto.ProofVerificationResponse;
+import com.bloxbean.cardano.dataprover.dto.ValueLookupResponse;
 import com.bloxbean.cardano.dataprover.model.MerkleStatus;
 import com.bloxbean.cardano.dataprover.service.merkle.MerkleRegistry;
 import com.bloxbean.cardano.dataprover.test.TestDataItem;
@@ -465,6 +479,95 @@ class DataProverIntegrationTest {
         assertThat(verifyResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(verifyResponse.getBody()).isNotNull();
         assertThat(verifyResponse.getBody().getVerified()).isFalse();
+    }
+
+    @Test
+    @Order(16)
+    @DisplayName("Should lookup value for existing key")
+    void testValueLookupExistingKey() {
+        String trieId = createTrieWithData();
+
+        ResponseEntity<ValueLookupResponse> response = restTemplate.getForEntity(
+                API_BASE + "/merkle/" + trieId + "/values?key=0102030405",
+                ValueLookupResponse.class
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getKey()).isEqualTo("0102030405");
+        assertThat(response.getBody().getValue()).isEqualTo("aabbccddee");
+        assertThat(response.getBody().isFound()).isTrue();
+    }
+
+    @Test
+    @Order(17)
+    @DisplayName("Should return not found for non-existing key")
+    void testValueLookupNonExistingKey() {
+        String trieId = createTrieWithData();
+
+        ResponseEntity<ValueLookupResponse> response = restTemplate.getForEntity(
+                API_BASE + "/merkle/" + trieId + "/values?key=ffffffffffff",
+                ValueLookupResponse.class
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getKey()).isEqualTo("ffffffffffff");
+        assertThat(response.getBody().getValue()).isNull();
+        assertThat(response.getBody().isFound()).isFalse();
+    }
+
+    @Test
+    @Order(18)
+    @DisplayName("Should batch lookup values")
+    void testBatchValueLookup() {
+        String trieId = createTrieWithData();
+
+        BatchValueLookupRequest request = new BatchValueLookupRequest(
+                List.of("0102030405", "0506070809", "ffffffffffff")
+        );
+
+        ResponseEntity<BatchValueLookupResponse> response = restTemplate.postForEntity(
+                API_BASE + "/merkle/" + trieId + "/values/batch",
+                request,
+                BatchValueLookupResponse.class
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getResults()).hasSize(3);
+
+        // First key exists
+        assertThat(response.getBody().getResults().get(0).getKey()).isEqualTo("0102030405");
+        assertThat(response.getBody().getResults().get(0).getValue()).isEqualTo("aabbccddee");
+        assertThat(response.getBody().getResults().get(0).isFound()).isTrue();
+
+        // Second key exists
+        assertThat(response.getBody().getResults().get(1).getKey()).isEqualTo("0506070809");
+        assertThat(response.getBody().getResults().get(1).getValue()).isEqualTo("ffeeddccbb");
+        assertThat(response.getBody().getResults().get(1).isFound()).isTrue();
+
+        // Third key doesn't exist
+        assertThat(response.getBody().getResults().get(2).getKey()).isEqualTo("ffffffffffff");
+        assertThat(response.getBody().getResults().get(2).getValue()).isNull();
+        assertThat(response.getBody().getResults().get(2).isFound()).isFalse();
+    }
+
+    @Test
+    @Order(19)
+    @DisplayName("Should lookup value with 0x prefix in key")
+    void testValueLookupWithHexPrefix() {
+        String trieId = createTrieWithData();
+
+        ResponseEntity<ValueLookupResponse> response = restTemplate.getForEntity(
+                API_BASE + "/merkle/" + trieId + "/values?key=0x0102030405",
+                ValueLookupResponse.class
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getValue()).isEqualTo("aabbccddee");
+        assertThat(response.getBody().isFound()).isTrue();
     }
 
     // Helper methods

@@ -1,9 +1,12 @@
 package com.bloxbean.cardano.dataprover.controller;
 
+import com.bloxbean.cardano.dataprover.dto.BatchValueLookupRequest;
+import com.bloxbean.cardano.dataprover.dto.BatchValueLookupResponse;
 import com.bloxbean.cardano.dataprover.dto.ProofGenerationRequest;
 import com.bloxbean.cardano.dataprover.dto.ProofGenerationResponse;
 import com.bloxbean.cardano.dataprover.dto.ProofVerificationRequest;
 import com.bloxbean.cardano.dataprover.dto.ProofVerificationResponse;
+import com.bloxbean.cardano.dataprover.dto.ValueLookupResponse;
 import com.bloxbean.cardano.dataprover.service.ProofService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -76,5 +79,29 @@ public class ProofController {
                 "merkleIdentifier", merkleId,
                 "rootHash", rootHash
         ));
+    }
+
+    @GetMapping("/values")
+    public ResponseEntity<ValueLookupResponse> getValue(
+            @PathVariable String merkleId,
+            @RequestParam String key) {
+
+        log.info("Looking up value for key {} in merkle {}", key, merkleId);
+
+        ValueLookupResponse response = proofService.getValue(merkleId, key);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/values/batch")
+    public ResponseEntity<BatchValueLookupResponse> getValuesBatch(
+            @PathVariable String merkleId,
+            @Valid @RequestBody BatchValueLookupRequest request) {
+
+        log.info("Looking up {} keys in merkle {}", request.getKeys().size(), merkleId);
+
+        List<ValueLookupResponse> results = proofService.getValues(merkleId, request.getKeys());
+
+        return ResponseEntity.ok(new BatchValueLookupResponse(results));
     }
 }
