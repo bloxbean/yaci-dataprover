@@ -1,4 +1,4 @@
-rootProject.name = 'yaci-proof-server'
+rootProject.name = 'yaci-dataprover'
 
 include 'core'
 include 'spring-boot-starter'

@@ -1,1 +1,1 @@
-com.bloxbean.cardano.proofserver.autoconfigure.ProofServerAutoConfiguration
+com.bloxbean.cardano.dataprover.autoconfigure.DataProverAutoConfiguration

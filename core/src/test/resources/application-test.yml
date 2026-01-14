@@ -12,9 +12,9 @@ spring:
   flyway:
     enabled: false
 
-proof-server:
+dataprover:
   storage:
-    rocksdb-path: ${java.io.tmpdir}/proof-server-test/rocksdb
+    rocksdb-path: ${java.io.tmpdir}/dataprover-test/rocksdb
     cache-size-mb: 64
   cache:
     max-active-tries: 10
@@ -23,5 +23,5 @@ proof-server:
 
 logging:
   level:
-    com.bloxbean.cardano.proofserver: DEBUG
+    com.bloxbean.cardano.dataprover: DEBUG
     org.springframework.web: INFO

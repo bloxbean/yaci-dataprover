@@ -1,8 +1,8 @@
 spring:
   application:
-    name: proof-server
+    name: dataprover
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:proofserver}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:dataprover}
     username: ${DB_USER:postgres}
     password: ${DB_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
@@ -12,7 +12,7 @@ spring:
       connection-timeout: 30000
       idle-timeout: 600000
       max-lifetime: 1800000
-      pool-name: ProofServerPool
+      pool-name: DataProverPool
   jpa:
     hibernate:
       ddl-auto: validate
@@ -29,7 +29,7 @@ spring:
 server:
   port: 8080
 
-proof-server:
+dataprover:
   storage:
     rocksdb-path: ${ROCKSDB_PATH:./data/rocksdb}
     cache-size-mb: 512

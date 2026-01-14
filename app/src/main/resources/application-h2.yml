@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:h2:file:./data/proofserver;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    url: jdbc:h2:file:./data/dataprover;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
     username: sa
     password:
     driver-class-name: org.h2.Driver
@@ -15,7 +15,7 @@ spring:
       enabled: true
       path: /h2-console
 
-proof-server:
+dataprover:
   storage:
     rocksdb-path: ./data/rocksdb
     cache-size-mb: 128

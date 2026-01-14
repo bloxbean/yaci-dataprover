@@ -1,15 +1,15 @@
-# Yaci Proof Server - Design Document
+# Yaci DataProver - Design Document
 
 ## 1. Overview
 
-Yaci Proof Server is a multi-purpose cryptographic proof server with pluggable trie implementations designed for Cardano and other blockchain use cases.
+Yaci DataProver is a multi-purpose data prover with pluggable Merkle implementations designed for Cardano and other blockchain use cases. It generates cryptographic proofs for data membership/existence verification.
 
 ### Key Features
 
-- **Multiple Independent Tries** - Support multiple trie instances in a single deployment
-- **Pluggable Trie Implementations** - MPF (Merkle Patricia Forestry) default, extensible for other types
+- **Multiple Independent Merkle Structures** - Support multiple merkle instances in a single deployment
+- **Pluggable Merkle Schemes** - MPF (Merkle Patricia Forestry) default, extensible for other types (JMT, etc.)
 - **Data Provider Pattern** - Flexible data ingestion from various sources via plugins
-- **RESTful API** - Complete API for trie and proof operations
+- **RESTful API** - Complete API for merkle and proof operations
 - **CBOR Serialization** - On-chain Cardano compatibility
 - **RocksDB Persistence** - High-performance storage with column family isolation
 
@@ -28,9 +28,9 @@ Yaci Proof Server is a multi-purpose cryptographic proof server with pluggable t
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                      REST API Layer                          │
-│  ┌─────────────┐ ┌───────────────┐ ┌───────────────────────┐│
-│  │TrieController│ │ProofController│ │IngestionController   ││
-│  └─────────────┘ └───────────────┘ └───────────────────────┘│
+│  ┌───────────────┐ ┌───────────────┐ ┌───────────────────┐  │
+│  │MerkleController│ │ProofController│ │IngestionController│  │
+│  └───────────────┘ └───────────────┘ └───────────────────┘  │
 │                    ┌────────────────┐                        │
 │                    │AdminController │                        │
 │                    └────────────────┘                        │
@@ -38,18 +38,18 @@ Yaci Proof Server is a multi-purpose cryptographic proof server with pluggable t
                              │
 ┌────────────────────────────▼────────────────────────────────┐
 │                      Service Layer                           │
-│  ┌───────────────────┐ ┌─────────────┐ ┌──────────────────┐ │
-│  │TrieManagementSvc  │ │ ProofService│ │IngestionService  │ │
-│  └───────────────────┘ └─────────────┘ └──────────────────┘ │
+│  ┌─────────────────────┐ ┌─────────────┐ ┌────────────────┐ │
+│  │MerkleManagementSvc  │ │ ProofService│ │IngestionService│ │
+│  └─────────────────────┘ └─────────────┘ └────────────────┘ │
 └────────────────────────────┬────────────────────────────────┘
                              │
 ┌────────────────────────────▼────────────────────────────────┐
-│              Trie Abstraction Layer                          │
-│  ┌────────────┐  ┌───────────┐  ┌─────────────────────────┐ │
-│  │TrieRegistry│  │TrieFactory│  │DataProviderRegistry     │ │
-│  └────────────┘  └───────────┘  └─────────────────────────┘ │
+│              Merkle Abstraction Layer                        │
+│  ┌──────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
+│  │MerkleRegistry│  │MerkleFactory│  │DataProviderRegistry │ │
+│  └──────────────┘  └─────────────┘  └─────────────────────┘ │
 │  ┌─────────────────────────────────────────────────────────┐│
-│  │         TrieImplementation (MPF, future: JMT)           ││
+│  │       MerkleImplementation (MPF, future: JMT)           ││
 │  └─────────────────────────────────────────────────────────┘│
 └────────────────────────────┬────────────────────────────────┘
                              │
@@ -57,7 +57,7 @@ Yaci Proof Server is a multi-purpose cryptographic proof server with pluggable t
 │                    Storage Layer                             │
 │  ┌─────────────────────────┐  ┌───────────────────────────┐ │
 │  │       RocksDB           │  │      PostgreSQL/H2        │ │
-│  │   (Trie Nodes)          │  │      (Metadata)           │ │
+│  │   (Merkle Nodes)        │  │      (Metadata)           │ │
 │  └─────────────────────────┘  └───────────────────────────┘ │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -66,7 +66,7 @@ Yaci Proof Server is a multi-purpose cryptographic proof server with pluggable t
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                      proof-server-app                        │
+│                      dataprover-app                          │
 │  ┌─────────────┐    ┌──────────────┐    ┌────────────────┐  │
 │  │PluginLoader │───▶│ServiceLoader │───▶│DataProvider<T> │  │
 │  └─────────────┘    └──────────────┘    └────────────────┘  │
@@ -83,22 +83,22 @@ Yaci Proof Server is a multi-purpose cryptographic proof server with pluggable t
 
 ### Data Flow
 
-1. **Trie Creation**: Client creates trie via REST → Service persists metadata → RocksDB column family created
-2. **Data Ingestion**: Client triggers ingestion → Provider fetches data → Service serializes and inserts into trie
-3. **Proof Generation**: Client requests proof → Service generates merkle proof from trie → Returns hex/CBOR encoded proof
-4. **Proof Verification**: Client submits proof + root hash → Service verifies against trie → Returns verification result
+1. **Merkle Creation**: Client creates merkle via REST → Service persists metadata → RocksDB column family created
+2. **Data Ingestion**: Client triggers ingestion → Provider fetches data → Service serializes and inserts into merkle structure
+3. **Proof Generation**: Client requests proof → Service generates merkle proof → Returns hex/CBOR encoded proof
+4. **Proof Verification**: Client submits proof + root hash → Service verifies against merkle → Returns verification result
 
 ---
 
 ## 3. Module Structure
 
 ```
-yaci-proof-server/
+yaci-dataprover/
 ├── core/                          # Core library
 │   └── src/main/java/.../
 │       ├── controller/            # REST controllers
 │       ├── service/               # Business logic
-│       │   ├── trie/              # Trie abstractions
+│       │   ├── merkle/            # Merkle abstractions
 │       │   ├── provider/          # Data provider abstractions
 │       │   └── storage/           # RocksDB management
 │       ├── dto/                   # Request/Response DTOs
@@ -130,7 +130,7 @@ yaci-proof-server/
 
 | Module | Purpose |
 |--------|---------|
-| `core` | Core library with controllers, services, DTOs, and trie implementations |
+| `core` | Core library with controllers, services, DTOs, and merkle implementations |
 | `spring-boot-starter` | Auto-configuration for embedding in other Spring Boot apps |
 | `app` | Standalone application with plugin loading |
 | `providers/*` | Data provider plugins (fat JARs) |
@@ -158,13 +158,13 @@ public interface DataProvider<T> {
 
 **Location:** `core/src/main/java/.../service/provider/DataProvider.java`
 
-### TrieImplementation
+### MerkleImplementation
 
-Interface for trie operations.
+Interface for merkle operations.
 
 ```java
-public interface TrieImplementation {
-    String getType();                                     // Trie type (e.g., "mpf")
+public interface MerkleImplementation {
+    String getScheme();                                   // Merkle scheme (e.g., "mpf")
     void put(byte[] key, byte[] value);                   // Add/update entry
     Optional<byte[]> get(byte[] key);                     // Retrieve value
     Optional<byte[]> getProofWire(byte[] key);            // Generate proof
@@ -177,31 +177,31 @@ public interface TrieImplementation {
 }
 ```
 
-**Location:** `core/src/main/java/.../service/trie/TrieImplementation.java`
+**Location:** `core/src/main/java/.../service/merkle/MerkleImplementation.java`
 
-### TrieFactory
+### MerkleFactory
 
-Factory for creating trie instances.
+Factory for creating merkle instances.
 
 ```java
-public interface TrieFactory {
-    TrieImplementation createTrie(String type, TrieConfiguration config);
-    Set<String> getSupportedTypes();
+public interface MerkleFactory {
+    MerkleImplementation createMerkle(String scheme, MerkleConfiguration config);
+    Set<String> getSupportedSchemes();
 }
 ```
 
-**Location:** `core/src/main/java/.../service/trie/TrieFactory.java`
+**Location:** `core/src/main/java/.../service/merkle/MerkleFactory.java`
 
-### TrieRegistry
+### MerkleRegistry
 
-LRU cache for active trie instances.
+LRU cache for active merkle instances.
 
 - Configurable max cache size (default: 50)
 - TTL-based expiration (default: 60 minutes)
 - Thread-safe with ReadWriteLock
 - Tracks cache statistics (hits, misses, hit rate)
 
-**Location:** `core/src/main/java/.../service/trie/TrieRegistry.java`
+**Location:** `core/src/main/java/.../service/merkle/MerkleRegistry.java`
 
 ---
 
@@ -209,20 +209,20 @@ LRU cache for active trie instances.
 
 **Base URL:** `/api/v1`
 
-### Trie Management
+### Merkle Management
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/tries` | Create new trie |
-| GET | `/tries/{identifier}` | Get trie details |
-| GET | `/tries` | List all tries (paginated) |
-| DELETE | `/tries/{identifier}` | Delete trie |
+| POST | `/merkle` | Create new merkle |
+| GET | `/merkle/{identifier}` | Get merkle details |
+| GET | `/merkle` | List all merkles (paginated) |
+| DELETE | `/merkle/{identifier}` | Delete merkle |
 
-**Create Trie Request:**
+**Create Merkle Request:**
 ```json
 {
   "identifier": "epoch-500-stakes",
-  "trieType": "mpf",
+  "scheme": "mpf",
   "description": "Epoch 500 stake distribution",
   "metadata": { "epoch": 500 }
 }
@@ -232,8 +232,8 @@ LRU cache for active trie instances.
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/tries/{trieId}/ingest` | Ingest data via provider |
-| POST | `/tries/{trieId}/entries` | Add entries directly |
+| POST | `/merkle/{merkleId}/ingest` | Ingest data via provider |
+| POST | `/merkle/{merkleId}/entries` | Add entries directly |
 
 **Ingest Request:**
 ```json
@@ -257,10 +257,10 @@ LRU cache for active trie instances.
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/tries/{trieId}/proofs` | Generate single proof |
-| POST | `/tries/{trieId}/proofs/batch` | Generate batch proofs |
-| POST | `/tries/{trieId}/proofs/verify` | Verify proof |
-| GET | `/tries/{trieId}/root` | Get root hash |
+| POST | `/merkle/{merkleId}/proofs` | Generate single proof |
+| POST | `/merkle/{merkleId}/proofs/batch` | Generate batch proofs |
+| POST | `/merkle/{merkleId}/proofs/verify` | Verify proof |
+| GET | `/merkle/{merkleId}/root` | Get root hash |
 
 **Proof Generation Request:**
 ```json
@@ -289,7 +289,7 @@ LRU cache for active trie instances.
 | GET | `/admin/stats` | System statistics |
 | GET | `/admin/cache` | Cache information |
 | GET | `/admin/storage` | Storage info |
-| DELETE | `/admin/cache/evict/{trieId}` | Evict from cache |
+| DELETE | `/admin/cache/evict/{merkleId}` | Evict from cache |
 | DELETE | `/admin/cache/clear` | Clear all cache |
 
 ---
@@ -300,7 +300,7 @@ LRU cache for active trie instances.
 
 | DTO | Purpose |
 |-----|---------|
-| `CreateTrieRequest` | Create new trie (identifier, type, description, metadata) |
+| `CreateMerkleRequest` | Create new merkle (identifier, scheme, description, metadata) |
 | `IngestRequest` | Trigger provider ingestion (provider name, config) |
 | `ProofGenerationRequest` | Request proof (key, format) |
 | `ProofVerificationRequest` | Verify proof (key, proof, value, rootHash) |
@@ -310,17 +310,17 @@ LRU cache for active trie instances.
 
 | DTO | Purpose |
 |-----|---------|
-| `TrieResponse` | Trie metadata (identifier, type, status, rootHash, recordCount) |
+| `MerkleResponse` | Merkle metadata (identifier, scheme, status, rootHash, recordCount) |
 | `IngestResponse` | Ingestion result (recordsProcessed, rootHash, durationMs) |
 | `ProofGenerationResponse` | Generated proof (key, value, proof, rootHash) |
 | `AddEntriesResponse` | Entry addition result (entriesAdded, rootHash) |
 
-### Entity: TrieMetadata
+### Entity: MerkleMetadata
 
 | Field | Type | Description |
 |-------|------|-------------|
 | identifier | String | Primary key (3-64 chars) |
-| trieType | String | Trie type (mpf, jmt) |
+| scheme | String | Merkle scheme (mpf, jmt) |
 | rootHash | String | Current merkle root |
 | recordCount | Integer | Number of entries |
 | status | Enum | ACTIVE, ARCHIVED, DELETED |
@@ -329,19 +329,19 @@ LRU cache for active trie instances.
 | lastUpdated | Instant | Last update timestamp |
 | version | Long | Optimistic locking |
 
-**Location:** `core/src/main/java/.../model/TrieMetadata.java`
+**Location:** `core/src/main/java/.../model/MerkleMetadata.java`
 
 ---
 
 ## 7. Storage
 
-### RocksDB (Trie Nodes)
+### RocksDB (Merkle Nodes)
 
-- **Purpose:** High-performance key-value storage for trie nodes
-- **Organization:** One column family per trie for isolation
+- **Purpose:** High-performance key-value storage for merkle nodes
+- **Organization:** One column family per merkle for isolation
 - **System Column Families:**
   - `default` - Default column family
-  - `roots` - Stores root hashes by trie identifier
+  - `roots` - Stores root hashes by merkle identifier
 
 **Configuration:**
 - Block cache with LRU eviction
@@ -353,8 +353,8 @@ LRU cache for active trie instances.
 
 ### PostgreSQL/H2 (Metadata)
 
-- **Purpose:** Trie metadata persistence
-- **Tables:** `trie_metadata`
+- **Purpose:** Merkle metadata persistence
+- **Tables:** `merkle_metadata`
 - **Migrations:** Flyway (`classpath:db/migration`)
 
 ---
@@ -373,24 +373,24 @@ epoch-stake-provider.jar
 │   └── ...
 └── META-INF/
     └── services/
-        └── com.bloxbean.cardano.proofserver.service.provider.DataProvider
+        └── com.bloxbean.cardano.dataprover.service.provider.DataProvider
 ```
 
 **Service File Contents:**
 ```
-com.bloxbean.cardano.proofserver.providers.epochstake.EpochStakeDataProvider
+com.bloxbean.cardano.dataprover.providers.epochstake.EpochStakeDataProvider
 ```
 
 ### Plugin Loading Flow
 
 1. Application starts
-2. `PluginLoader` scans `${proof-server.plugins.path}` (default: `./plugins`)
+2. `PluginLoader` scans `${dataprover.plugins.path}` (default: `./plugins`)
 3. For each JAR:
    - Create `URLClassLoader`
    - Load `DataProvider` implementations via `ServiceLoader`
    - Call `provider.initialize(config)` with provider-specific config
    - Register with `DataProviderRegistry`
-4. Providers available via `/api/v1/tries/{id}/ingest`
+4. Providers available via `/api/v1/merkle/{id}/ingest`
 
 **Location:** `app/src/main/java/.../PluginLoader.java`
 
@@ -400,7 +400,7 @@ Fetches Cardano epoch stake distribution from Yaci Store database.
 
 **Configuration:**
 ```yaml
-proof-server:
+dataprover:
   plugins:
     providers:
       epoch-stake:
@@ -421,7 +421,7 @@ proof-server:
 ### Application Configuration
 
 ```yaml
-proof-server:
+dataprover:
   # RocksDB Storage
   storage:
     rocksdb-path: ./data/rocksdb      # Storage location
@@ -431,20 +431,20 @@ proof-server:
     max-open-files: 1000              # Max file handles
     create-if-missing: true           # Auto-create DB
 
-  # Trie Cache
+  # Merkle Cache
   cache:
-    max-active-tries: 50              # Max tries in memory
+    max-active-merkles: 50            # Max merkles in memory
     eviction-policy: LRU              # Cache eviction strategy
     ttl-minutes: 60                   # Cache TTL
 
   # Retention
   retention:
-    max-tries: 100                    # Maximum tries
+    max-merkles: 100                  # Maximum merkles
     archive-policy: oldest-first      # Auto-archive policy
     auto-archive-threshold: 90        # Archive at X% capacity
 
-  # Default trie type
-  default-trie-type: mpf
+  # Default merkle scheme
+  default-scheme: mpf
 
   # Plugins
   plugins:
@@ -458,7 +458,7 @@ proof-server:
 # Spring Configuration
 spring:
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:5432/${DB_NAME:proofserver}
+    url: jdbc:postgresql://${DB_HOST:localhost}:5432/${DB_NAME:dataprover}
     username: ${DB_USER:postgres}
     password: ${DB_PASSWORD:postgres}
   jpa:
@@ -470,8 +470,8 @@ spring:
 
 ### Configuration Class
 
-**Location:** `core/src/main/java/.../config/TrieServerProperties.java`
-**Prefix:** `proof-server`
+**Location:** `core/src/main/java/.../config/DataProverProperties.java`
+**Prefix:** `dataprover`
 
 ---
 
@@ -482,7 +482,7 @@ spring:
 | Java | 21+ | Virtual threads support |
 | Spring Boot | 3.4.x | Framework |
 | Spring Data JPA | - | Data access |
-| Cardano Client Library | 0.8.0-SNAPSHOT | MPF trie implementation |
+| Cardano Client Library | 0.8.0-SNAPSHOT | MPF merkle implementation |
 | RocksDB | 9.8.4 | Key-value storage |
 | PostgreSQL | 42.7.4 | Metadata storage |
 | H2 | - | Development/testing |
