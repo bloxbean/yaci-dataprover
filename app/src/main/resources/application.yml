@@ -14,16 +14,15 @@ spring:
       max-lifetime: 1800000
       pool-name: DataProverPool
   jpa:
-    hibernate:
-      ddl-auto: validate
+#    hibernate:
+#      ddl-auto: validate
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
   flyway:
     enabled: true
-    baseline-on-migrate: true
-    baseline-version: 0
+    out-of-order: true
     locations: classpath:db/migration
 
 server:
