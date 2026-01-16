@@ -69,6 +69,6 @@ Plugins are discovered via Java ServiceLoader (SPI). Provider JARs must include:
 
 ### API Endpoints
 
-Base URL: `http://localhost:8080/api/v1`
-- Swagger UI: `http://localhost:8080/swagger-ui.html`
-- Health: `http://localhost:8080/actuator/health`
+Base URL: `http://localhost:9090/api/v1`
+- Swagger UI: `http://localhost:9090/swagger-ui.html`
+- Health: `http://localhost:9090/api/v1/admin/health`
