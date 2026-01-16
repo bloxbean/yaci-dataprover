@@ -1,0 +1,54 @@
+# Git
+.git
+.gitignore
+
+# Gradle
+.gradle
+**/.gradle/
+build/
+**/build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# IDE files
+.idea
+*.iws
+*.iml
+*.ipr
+.vscode/
+.project
+.classpath
+.settings
+.factorypath
+.springBeans
+.sts4-cache
+out/
+
+# Local configuration
+application-local.properties
+
+# Logs and data
+logs
+*.log
+_rocksdb
+data/
+
+# Claude
+.claude/
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Documentation
+*.md
+adr/
+
+# Plugins directory (mounted as volume)
+plugins/
+
+# UI built files
+ui/src/main/resources/static/
+
+# Node modules (must be reinstalled in Docker for correct architecture)
+**/node_modules/
