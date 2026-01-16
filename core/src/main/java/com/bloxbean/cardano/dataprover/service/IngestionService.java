@@ -7,6 +7,8 @@ import com.bloxbean.cardano.dataprover.dto.IngestRequest;
 import com.bloxbean.cardano.dataprover.dto.IngestResponse;
 import com.bloxbean.cardano.dataprover.exception.DataProviderException;
 import com.bloxbean.cardano.dataprover.exception.MerkleNotFoundException;
+import com.bloxbean.cardano.dataprover.model.MerkleMetadata;
+import com.bloxbean.cardano.dataprover.repository.MerkleMetadataRepository;
 import com.bloxbean.cardano.dataprover.service.provider.DataProvider;
 import com.bloxbean.cardano.dataprover.service.provider.DataProviderRegistry;
 import com.bloxbean.cardano.dataprover.service.provider.ValidationResult;
@@ -15,6 +17,7 @@ import com.bloxbean.cardano.dataprover.service.merkle.MerkleRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.HexFormat;
@@ -31,12 +34,17 @@ public class IngestionService {
 
     private final MerkleRegistry merkleRegistry;
     private final DataProviderRegistry providerRegistry;
+    private final MerkleMetadataRepository metadataRepository;
 
-    public IngestionService(MerkleRegistry merkleRegistry, DataProviderRegistry providerRegistry) {
+    public IngestionService(MerkleRegistry merkleRegistry,
+                           DataProviderRegistry providerRegistry,
+                           MerkleMetadataRepository metadataRepository) {
         this.merkleRegistry = merkleRegistry;
         this.providerRegistry = providerRegistry;
+        this.metadataRepository = metadataRepository;
     }
 
+    @Transactional
     public IngestResponse ingestData(String merkleIdentifier, IngestRequest request) {
         long startTime = System.currentTimeMillis();
 
@@ -51,6 +59,15 @@ public class IngestionService {
         DataProvider<?> provider = providerRegistry.getProvider(request.getProvider());
 
         IngestResponse response = processData(merkle, provider, request, merkleIdentifier);
+
+        // Update the record count and root hash in the metadata
+        if (response.getRecordsProcessed() > 0) {
+            MerkleMetadata metadata = metadataRepository.findByIdentifier(merkleIdentifier)
+                    .orElseThrow(() -> new MerkleNotFoundException(merkleIdentifier));
+            metadata.incrementRecordCount(response.getRecordsProcessed());
+            metadata.setRootHash(response.getRootHash());
+            metadataRepository.save(metadata);
+        }
 
         long duration = System.currentTimeMillis() - startTime;
         response.setDurationMs(duration);
@@ -137,6 +154,7 @@ public class IngestionService {
      * @param request the request containing entries to add
      * @return response with results
      */
+    @Transactional
     public AddEntriesResponse addEntries(String merkleIdentifier, AddEntriesRequest request) {
         long startTime = System.currentTimeMillis();
 
@@ -173,6 +191,15 @@ public class IngestionService {
 
         byte[] rootHash = merkle.getRootHash();
         String rootHashHex = HEX.formatHex(rootHash);
+
+        // Update the record count and root hash in the metadata
+        if (entriesAdded > 0) {
+            MerkleMetadata metadata = metadataRepository.findByIdentifier(merkleIdentifier)
+                    .orElseThrow(() -> new MerkleNotFoundException(merkleIdentifier));
+            metadata.incrementRecordCount(entriesAdded);
+            metadata.setRootHash(rootHashHex);
+            metadataRepository.save(metadata);
+        }
 
         long duration = System.currentTimeMillis() - startTime;
 

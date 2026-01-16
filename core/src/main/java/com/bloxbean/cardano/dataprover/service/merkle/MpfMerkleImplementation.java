@@ -7,6 +7,7 @@ import com.bloxbean.cardano.vds.mpt.rocksdb.RocksDbNodeStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HexFormat;
 import java.util.Optional;
 
 /**
@@ -17,6 +18,7 @@ public class MpfMerkleImplementation implements MerkleImplementation {
 
     private static final Logger log = LoggerFactory.getLogger(MpfMerkleImplementation.class);
     private static final String SCHEME = "mpf";
+    private static final HexFormat HEX = HexFormat.of();
 
     private final String identifier;
     private final SecureTrie trie;
@@ -24,12 +26,18 @@ public class MpfMerkleImplementation implements MerkleImplementation {
 
     private long operationCount = 0;
 
-    public MpfMerkleImplementation(String identifier, RocksDbNodeStore nodeStore) {
+    public MpfMerkleImplementation(String identifier, RocksDbNodeStore nodeStore, String rootHashHex) {
         this.identifier = identifier;
         this.nodeStore = nodeStore;
-        this.trie = new SecureTrie(nodeStore, Blake2b256::digest);
 
-        log.debug("Created MPF merkle implementation for: {}", identifier);
+        if (rootHashHex != null && !rootHashHex.isBlank()) {
+            byte[] rootHash = HEX.parseHex(rootHashHex);
+            this.trie = new SecureTrie(nodeStore, Blake2b256::digest, rootHash);
+            log.debug("Created MPF merkle implementation for: {} with existing root hash", identifier);
+        } else {
+            this.trie = new SecureTrie(nodeStore, Blake2b256::digest);
+            log.debug("Created MPF merkle implementation for: {} (new trie)", identifier);
+        }
     }
 
     @Override

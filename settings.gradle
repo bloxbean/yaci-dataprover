@@ -2,5 +2,6 @@ rootProject.name = 'yaci-dataprover'
 
 include 'core'
 include 'spring-boot-starter'
+include 'ui'
 include 'app'
 include 'providers:epoch-stake-provider'

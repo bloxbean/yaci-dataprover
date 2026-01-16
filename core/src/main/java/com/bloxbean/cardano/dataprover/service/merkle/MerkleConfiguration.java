@@ -12,6 +12,7 @@ public class MerkleConfiguration {
     private String scheme;
     private String storagePath;
     private String hashFunction;
+    private String rootHash;
     private Map<String, Object> customConfig;
 
     public MerkleConfiguration() {
@@ -54,6 +55,14 @@ public class MerkleConfiguration {
         this.hashFunction = hashFunction;
     }
 
+    public String getRootHash() {
+        return rootHash;
+    }
+
+    public void setRootHash(String rootHash) {
+        this.rootHash = rootHash;
+    }
+
     public Map<String, Object> getCustomConfig() {
         return customConfig;
     }
@@ -82,6 +91,11 @@ public class MerkleConfiguration {
 
         public Builder hashFunction(String hashFunction) {
             config.setHashFunction(hashFunction);
+            return this;
+        }
+
+        public Builder rootHash(String rootHash) {
+            config.setRootHash(rootHash);
             return this;
         }
 

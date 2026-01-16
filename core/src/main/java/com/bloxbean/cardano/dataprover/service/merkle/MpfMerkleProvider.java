@@ -44,9 +44,10 @@ public class MpfMerkleProvider implements MerkleProvider {
             columnFamilyHandle
         );
 
-        MpfMerkleImplementation merkle = new MpfMerkleImplementation(identifier, nodeStore);
+        String rootHash = config.getRootHash();
+        MpfMerkleImplementation merkle = new MpfMerkleImplementation(identifier, nodeStore, rootHash);
 
-        log.info("Created MPF merkle: {}", identifier);
+        log.info("Created MPF merkle: {} (rootHash: {})", identifier, rootHash != null ? "present" : "null");
         return merkle;
     }
 

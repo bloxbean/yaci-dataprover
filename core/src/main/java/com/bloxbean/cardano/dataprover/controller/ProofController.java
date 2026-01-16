@@ -75,10 +75,12 @@ public class ProofController {
 
         String rootHash = proofService.getRootHash(merkleId);
 
-        return ResponseEntity.ok(Map.of(
-                "merkleIdentifier", merkleId,
-                "rootHash", rootHash
-        ));
+        // Map.of() doesn't allow null values, so use HashMap for null-safe handling
+        java.util.HashMap<String, String> response = new java.util.HashMap<>();
+        response.put("merkleIdentifier", merkleId);
+        response.put("rootHash", rootHash);
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/values")

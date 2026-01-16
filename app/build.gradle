@@ -6,6 +6,7 @@ plugins {
 
 dependencies {
     implementation project(':spring-boot-starter')
+    implementation project(':ui')
 
     // Swagger UI / OpenAPI
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0'

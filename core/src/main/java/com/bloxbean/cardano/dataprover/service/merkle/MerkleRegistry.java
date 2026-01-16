@@ -98,6 +98,7 @@ public class MerkleRegistry {
             .scheme(metadata.getScheme())
             .storagePath(properties.getStorage().getRocksdbPath())
             .hashFunction("blake2b-256")
+            .rootHash(metadata.getRootHash())
             .customConfig(metadata.getMetadata() != null ? metadata.getMetadata() : Map.of())
             .build();
 

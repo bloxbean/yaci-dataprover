@@ -169,6 +169,11 @@ public class ProofService {
         }
 
         byte[] rootHash = merkle.getRootHash();
+        if (rootHash == null) {
+            log.debug("Root hash for merkle {} is null (empty merkle tree)", merkleIdentifier);
+            return null;
+        }
+
         String rootHashHex = HEX.formatHex(rootHash);
 
         log.debug("Root hash for merkle {}: {}", merkleIdentifier, rootHashHex);
