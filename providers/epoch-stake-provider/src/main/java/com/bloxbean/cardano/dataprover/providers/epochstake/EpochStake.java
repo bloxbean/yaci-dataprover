@@ -4,8 +4,6 @@ package com.bloxbean.cardano.dataprover.providers.epochstake;
  * DTO representing epoch stake distribution data.
  */
 public class EpochStake {
-
-    private Long id;
     private Integer epoch;
     private String address;
     private Long amount;
@@ -14,20 +12,11 @@ public class EpochStake {
     public EpochStake() {
     }
 
-    public EpochStake(Long id, Integer epoch, String address, Long amount, String poolId) {
-        this.id = id;
+    public EpochStake(Integer epoch, String address, Long amount, String poolId) {
         this.epoch = epoch;
         this.address = address;
         this.amount = amount;
         this.poolId = poolId;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public Integer getEpoch() {
@@ -65,7 +54,6 @@ public class EpochStake {
     @Override
     public String toString() {
         return "EpochStake{" +
-                "id=" + id +
                 ", epoch=" + epoch +
                 ", address='" + address + '\'' +
                 ", amount=" + amount +

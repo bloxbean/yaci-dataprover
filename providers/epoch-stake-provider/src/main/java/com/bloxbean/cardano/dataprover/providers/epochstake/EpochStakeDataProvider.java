@@ -28,7 +28,7 @@ public class EpochStakeDataProvider extends AbstractDataProvider<EpochStake> {
             "SELECT EXISTS(SELECT 1 FROM epoch_stake WHERE epoch = ?)";
 
     private static final String SQL_FIND_BY_EPOCH =
-            "SELECT id, epoch, address, amount, pool_id FROM epoch_stake WHERE epoch = ?";
+            "SELECT active_epoch, address, amount, pool_id FROM epoch_stake WHERE epoch = ? and amount > 0";
 
     private DataSource dataSource;
 
@@ -122,13 +122,12 @@ public class EpochStakeDataProvider extends AbstractDataProvider<EpochStake> {
         try (Connection conn = dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(SQL_FIND_BY_EPOCH)) {
 
-            stmt.setInt(1, epoch);
+            stmt.setInt(1, epoch - 2);
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     EpochStake stake = new EpochStake(
-                            rs.getLong("id"),
-                            rs.getInt("epoch"),
+                            rs.getInt("active_epoch"),
                             rs.getString("address"),
                             rs.getLong("amount"),
                             rs.getString("pool_id")

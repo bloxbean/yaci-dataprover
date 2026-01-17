@@ -27,7 +27,7 @@ dependencies {
 
     // Cardano Client Library
     api "com.bloxbean.cardano:cardano-client-lib:${cardanoClientVersion}"
-    api "com.bloxbean.cardano:cardano-client-merkle-patricia-trie-rocksdb:${cardanoClientVersion}"
+    api "com.bloxbean.cardano:cardano-client-merkle-patricia-forestry-rocksdb:${cardanoClientVersion}"
 
     // RocksDB
     api "org.rocksdb:rocksdbjni:${rocksdbVersion}"

@@ -1,8 +1,7 @@
 package com.bloxbean.cardano.dataprover.service.merkle;
 
 import com.bloxbean.cardano.dataprover.exception.MerkleOperationException;
-import com.bloxbean.cardano.vds.core.hash.Blake2b256;
-import com.bloxbean.cardano.vds.mpt.SecureTrie;
+import com.bloxbean.cardano.vds.mpt.MpfTrie;
 import com.bloxbean.cardano.vds.mpt.rocksdb.RocksDbNodeStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +20,7 @@ public class MpfMerkleImplementation implements MerkleImplementation {
     private static final HexFormat HEX = HexFormat.of();
 
     private final String identifier;
-    private final SecureTrie trie;
+    private final MpfTrie trie;
     private final RocksDbNodeStore nodeStore;
 
     private long operationCount = 0;
@@ -32,10 +31,10 @@ public class MpfMerkleImplementation implements MerkleImplementation {
 
         if (rootHashHex != null && !rootHashHex.isBlank()) {
             byte[] rootHash = HEX.parseHex(rootHashHex);
-            this.trie = new SecureTrie(nodeStore, Blake2b256::digest, rootHash);
+            this.trie = new MpfTrie(nodeStore, rootHash);
             log.debug("Created MPF merkle implementation for: {} with existing root hash", identifier);
         } else {
-            this.trie = new SecureTrie(nodeStore, Blake2b256::digest);
+            this.trie = new MpfTrie(nodeStore);
             log.debug("Created MPF merkle implementation for: {} (new trie)", identifier);
         }
     }
@@ -130,7 +129,7 @@ public class MpfMerkleImplementation implements MerkleImplementation {
         }
     }
 
-    public SecureTrie getSecureTrie() {
+    public MpfTrie getTrie() {
         return trie;
     }
 

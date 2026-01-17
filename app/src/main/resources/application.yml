@@ -49,7 +49,7 @@ dataprover:
     path: ${PLUGINS_PATH:./plugins}
     providers:
       epoch-stake:
-        jdbc-url: jdbc:postgresql://${EPOCH_STAKE_DB_HOST:localhost}:5432/${EPOCH_STAKE_DB_NAME:yaci}
+        jdbc-url: jdbc:postgresql://${EPOCH_STAKE_DB_HOST:localhost}:${EPOCH_STAKE_DB_PORT:5432}/${EPOCH_STAKE_DB_NAME:yaci}?currentSchema=${EPOCH_STAKE_DB_SCHEMA:public}
         username: ${EPOCH_STAKE_DB_USER:yaci}
         password: ${EPOCH_STAKE_DB_PASSWORD:yaci}
 
