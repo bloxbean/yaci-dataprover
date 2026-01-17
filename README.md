@@ -145,16 +145,17 @@ http://localhost:9090/ui
 
 ## Configuration
 
-| Environment Variable | Description | Default |
-|---------------------|-------------|---------|
-| `DB_HOST` | PostgreSQL host | `localhost` |
-| `DB_PORT` | PostgreSQL port | `5432` |
-| `DB_NAME` | Database name | `dataprover` |
-| `DB_USER` | Database username | `postgres` |
-| `DB_PASSWORD` | Database password | `postgres` |
-| `ROCKSDB_PATH` | Path for RocksDB storage | `./data/rocksdb` |
-| `PLUGINS_PATH` | Path for plugin JARs | `./plugins` |
-| `DATAPROVER_UI_ENABLED` | Enable Admin UI | `false` |
+| Environment Variable    | Description              | Default          |
+|-------------------------|--------------------------|------------------|
+| `DP_DB_HOST`            | PostgreSQL host          | `localhost`      |
+| `DP_DB_PORT`            | PostgreSQL port          | `5432`           |
+| `DP_DB_NAME`            | Database name            | `dataprover`     |
+| `DP_DB_USER`            | Database username        | `postgres`       |
+| `DP_DB_PASSWORD`        | Database password        | `postgres`       |
+| `DP_DB_SCHEMA`          | Database schema          | `public`         |
+| `ROCKSDB_PATH`          | Path for RocksDB storage | `./data/rocksdb` |
+| `PLUGINS_PATH`          | Path for plugin JARs     | `./plugins`      |
+| `DATAPROVER_UI_ENABLED` | Enable Admin UI          | `false`          |
 
 ## API Reference
 

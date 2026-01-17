@@ -27,13 +27,13 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_NAME: dataprover
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      ROCKSDB_PATH: /app/data/rocksdb
-      PLUGINS_PATH: /app/plugins
+      DP_DB_HOST: postgres
+      DP_DB_PORT: 5432
+      DP_DB_NAME: dataprover
+      DP_DB_USER: postgres
+      DP_DB_PASSWORD: postgres
+      DP_ROCKSDB_PATH: /app/data/rocksdb
+      DP_PLUGINS_PATH: /app/plugins
       DATAPROVER_UI_ENABLED: "true"
     volumes:
       - ./data/rocksdb:/app/data/rocksdb

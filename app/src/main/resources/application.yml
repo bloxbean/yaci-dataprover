@@ -2,9 +2,9 @@ spring:
   application:
     name: dataprover
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:dataprover}?currentSchema=${DB_SCHEMA:public}
-    username: ${DB_USER:postgres}
-    password: ${DB_PASSWORD:postgres}
+    url: jdbc:postgresql://${DP_DB_HOST:localhost}:${DP_DB_PORT:5432}/${DP_DB_NAME:dataprover}?currentSchema=${DP_DB_SCHEMA:public}
+    username: ${DP_DB_USER:postgres}
+    password: ${DP_DB_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
@@ -30,7 +30,7 @@ server:
 
 dataprover:
   storage:
-    rocksdb-path: ${ROCKSDB_PATH:./data/rocksdb}
+    rocksdb-path: ${DP_ROCKSDB_PATH:./data/rocksdb}
     cache-size-mb: 512
     write-buffer-size-mb: 128
     compression: LZ4
@@ -46,7 +46,7 @@ dataprover:
     archive-policy: oldest-first
     auto-archive-threshold: 90
   plugins:
-    path: ${PLUGINS_PATH:./plugins}
+    path: ${DP_PLUGINS_PATH:./plugins}
     providers:
       epoch-stake:
         jdbc-url: jdbc:postgresql://${EPOCH_STAKE_DB_HOST:localhost}:${EPOCH_STAKE_DB_PORT:5432}/${EPOCH_STAKE_DB_NAME:yaci}?currentSchema=${EPOCH_STAKE_DB_SCHEMA:public}
