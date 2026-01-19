@@ -15,6 +15,9 @@ jar {
 }
 
 dependencies {
+    // Provider SPI interfaces
+    api project(':provider-spi')
+
     // Spring Boot Web
     api 'org.springframework.boot:spring-boot-starter-web'
     api 'org.springframework.boot:spring-boot-starter-data-jpa'

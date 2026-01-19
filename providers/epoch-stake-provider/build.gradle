@@ -11,8 +11,8 @@ dependencyManagement {
 }
 
 dependencies {
-    // Core interfaces - compile only (not bundled in fat JAR)
-    compileOnly project(':core')
+    // Provider SPI interfaces - compile only (not bundled in fat JAR)
+    compileOnly project(':provider-spi')
 
     // Cardano Client Library
     implementation "com.bloxbean.cardano:cardano-client-lib:${cardanoClientVersion}"
@@ -28,7 +28,7 @@ dependencies {
     implementation 'org.slf4j:slf4j-api:2.0.16'
 
     // Testing
-    testImplementation project(':core')
+    testImplementation project(':provider-spi')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
@@ -38,7 +38,7 @@ shadowJar {
     archiveClassifier = ''
 
     dependencies {
-        exclude(project(':core'))
+        exclude(project(':provider-spi'))
     }
 
     mergeServiceFiles()

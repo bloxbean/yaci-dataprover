@@ -1,0 +1,17 @@
+plugins {
+    id 'java-library'
+}
+
+jar {
+    archiveBaseName = "${rootProject.name}-provider-spi"
+}
+
+dependencies {
+    // Only SLF4J API for logging in AbstractDataProvider
+    api 'org.slf4j:slf4j-api:2.0.16'
+}
+
+java {
+    withSourcesJar()
+    withJavadocJar()
+}

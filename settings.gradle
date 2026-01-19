@@ -1,5 +1,6 @@
 rootProject.name = 'yaci-dataprover'
 
+include 'provider-spi'
 include 'core'
 include 'spring-boot-starter'
 include 'ui'
