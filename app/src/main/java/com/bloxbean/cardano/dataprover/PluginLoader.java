@@ -1,6 +1,7 @@
 package com.bloxbean.cardano.dataprover;
 
 import com.bloxbean.cardano.dataprover.config.DataProverProperties;
+import com.bloxbean.cardano.dataprover.service.ProviderConfigurationService;
 import com.bloxbean.cardano.dataprover.service.provider.DataProvider;
 import com.bloxbean.cardano.dataprover.service.provider.DataProviderRegistry;
 import jakarta.annotation.PostConstruct;
@@ -29,10 +30,14 @@ public class PluginLoader {
 
     private final DataProverProperties properties;
     private final DataProviderRegistry registry;
+    private final ProviderConfigurationService configurationService;
 
-    public PluginLoader(DataProverProperties properties, DataProviderRegistry registry) {
+    public PluginLoader(DataProverProperties properties,
+                        DataProviderRegistry registry,
+                        ProviderConfigurationService configurationService) {
         this.properties = properties;
         this.registry = registry;
+        this.configurationService = configurationService;
     }
 
     @PostConstruct
@@ -81,29 +86,21 @@ public class PluginLoader {
         try {
             String providerName = provider.getName();
 
-            // Get provider-specific configuration
-            Map<String, Object> config = getProviderConfig(providerName);
+            // Register first so it's available for config lookup
+            registry.register(provider);
+
+            // Get merged configuration (DB overrides ENV)
+            Map<String, Object> config = configurationService.getEffectiveConfig(providerName);
 
             // Initialize the provider with its configuration
             provider.initialize(config);
 
-            // Register with the registry
-            registry.register(provider);
-
-            log.info("Loaded provider: {} from {}", providerName, jarPath.getFileName());
+            log.info("Loaded provider: {} from {} (config source: {})",
+                    providerName, jarPath.getFileName(),
+                    configurationService.getConfigSource(providerName));
 
         } catch (Exception e) {
             log.error("Failed to initialize provider from JAR: {}", jarPath, e);
         }
-    }
-
-    private Map<String, Object> getProviderConfig(String providerName) {
-        Map<String, Map<String, Object>> providers = properties.getPlugins().getProviders();
-
-        if (providers != null && providers.containsKey(providerName)) {
-            return providers.get(providerName);
-        }
-
-        return Map.of();
     }
 }

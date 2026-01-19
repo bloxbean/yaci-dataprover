@@ -3,6 +3,7 @@ package com.bloxbean.cardano.dataprover.service.provider;
 import com.bloxbean.cardano.dataprover.exception.DataProviderException;
 import com.bloxbean.cardano.dataprover.exception.SerializationException;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -82,4 +83,70 @@ public interface DataProvider<T> {
      * @return the class of the data type
      */
     Class<T> getDataType();
+
+    /**
+     * Returns metadata about this provider for dynamic UI generation.
+     * Override this method to provide configuration schema and key serialization schema.
+     *
+     * @return provider metadata including config schema
+     */
+    default ProviderMetadata getMetadata() {
+        return ProviderMetadata.builder()
+                .name(getName())
+                .description(getDescription())
+                .dataType(getDataType() != null ? getDataType().getSimpleName() : "Unknown")
+                .status(ProviderStatus.AVAILABLE)
+                .configSchema(ConfigSchema.builder().fields(Collections.emptyList()).build())
+                .build();
+    }
+
+    /**
+     * Serializes a raw key input (e.g., stake address string) to bytes.
+     * Used by the UI to convert user-provided keys to hex format for proof generation.
+     *
+     * @param keyInput the raw key input from the user
+     * @return the serialized key bytes
+     * @throws SerializationException if serialization fails
+     */
+    default byte[] serializeKeyFromInput(String keyInput) throws SerializationException {
+        throw new UnsupportedOperationException(
+                "Key serialization from raw input is not supported by provider: " + getName());
+    }
+
+    /**
+     * Returns the schema for connection configuration fields.
+     * Override this to expose configurable settings (DB connections, API keys, etc.).
+     *
+     * @return connection config schema, or null if not configurable via UI
+     */
+    default ConnectionConfigSchema getConnectionConfigSchema() {
+        return null;
+    }
+
+    /**
+     * Reconfigures the provider with new settings.
+     * Called when UI configuration is saved.
+     *
+     * @param config new configuration values
+     * @return true if reconfiguration succeeded
+     */
+    default boolean reconfigure(Map<String, Object> config) {
+        try {
+            initialize(config);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * Tests configuration validity without saving.
+     * Used by UI to validate settings before persisting.
+     *
+     * @param config configuration to test
+     * @return test result with success/failure and message
+     */
+    default ConfigTestResult testConfiguration(Map<String, Object> config) {
+        return ConfigTestResult.success();
+    }
 }

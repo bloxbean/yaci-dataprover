@@ -1,17 +1,16 @@
 package com.bloxbean.cardano.dataprover.service;
 
-import com.bloxbean.cardano.dataprover.dto.AddEntriesRequest;
-import com.bloxbean.cardano.dataprover.dto.AddEntriesResponse;
-import com.bloxbean.cardano.dataprover.dto.EntryItem;
-import com.bloxbean.cardano.dataprover.dto.IngestRequest;
-import com.bloxbean.cardano.dataprover.dto.IngestResponse;
+import com.bloxbean.cardano.dataprover.dto.*;
 import com.bloxbean.cardano.dataprover.exception.DataProviderException;
 import com.bloxbean.cardano.dataprover.exception.MerkleNotFoundException;
 import com.bloxbean.cardano.dataprover.model.MerkleMetadata;
+import com.bloxbean.cardano.dataprover.model.MerkleStatus;
 import com.bloxbean.cardano.dataprover.repository.MerkleMetadataRepository;
 import com.bloxbean.cardano.dataprover.service.provider.DataProvider;
 import com.bloxbean.cardano.dataprover.service.provider.DataProviderRegistry;
 import com.bloxbean.cardano.dataprover.service.provider.ValidationResult;
+import com.bloxbean.cardano.dataprover.service.merkle.MerkleConfiguration;
+import com.bloxbean.cardano.dataprover.service.merkle.MerkleFactory;
 import com.bloxbean.cardano.dataprover.service.merkle.MerkleImplementation;
 import com.bloxbean.cardano.dataprover.service.merkle.MerkleRegistry;
 import org.slf4j.Logger;
@@ -20,8 +19,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Service for data ingestion operations.
@@ -33,13 +34,16 @@ public class IngestionService {
     private static final HexFormat HEX = HexFormat.of();
 
     private final MerkleRegistry merkleRegistry;
+    private final MerkleFactory merkleFactory;
     private final DataProviderRegistry providerRegistry;
     private final MerkleMetadataRepository metadataRepository;
 
     public IngestionService(MerkleRegistry merkleRegistry,
+                           MerkleFactory merkleFactory,
                            DataProviderRegistry providerRegistry,
                            MerkleMetadataRepository metadataRepository) {
         this.merkleRegistry = merkleRegistry;
+        this.merkleFactory = merkleFactory;
         this.providerRegistry = providerRegistry;
         this.metadataRepository = metadataRepository;
     }
@@ -213,6 +217,84 @@ public class IngestionService {
                 .rootHash(rootHashHex)
                 .durationMs(duration)
                 .errors(errors.isEmpty() ? null : errors)
+                .build();
+    }
+
+    /**
+     * Ingests data using a provider with optional auto-create merkle support.
+     *
+     * @param request the provider ingest request
+     * @return response with results
+     */
+    @Transactional
+    public ProviderIngestResponse ingestWithProvider(ProviderIngestRequest request) {
+        long startTime = System.currentTimeMillis();
+        String merkleIdentifier = request.getMerkleName();
+        boolean merkleCreated = false;
+
+        log.info("Starting provider ingestion for merkle {} using provider {}",
+                merkleIdentifier, request.getProvider());
+
+        // Check if merkle exists
+        boolean exists = metadataRepository.existsByIdentifier(merkleIdentifier);
+
+        if (!exists && request.isCreateIfNotExists()) {
+            // Create the merkle
+            log.info("Creating new merkle: {}", merkleIdentifier);
+
+            String scheme = request.getMerkleScheme() != null ? request.getMerkleScheme() : "mpf";
+
+            MerkleConfiguration config = MerkleConfiguration.builder()
+                    .identifier(merkleIdentifier)
+                    .scheme(scheme)
+                    .build();
+
+            MerkleImplementation merkle = merkleFactory.createMerkle(scheme, config);
+            merkleRegistry.registerMerkle(merkleIdentifier, merkle);
+
+            Map<String, Object> metadata = new HashMap<>();
+            if (request.getMerkleDescription() != null) {
+                metadata.put("description", request.getMerkleDescription());
+            }
+            metadata.put("provider", request.getProvider());
+
+            MerkleMetadata merkleMetadata = MerkleMetadata.builder()
+                    .identifier(merkleIdentifier)
+                    .scheme(scheme)
+                    .status(MerkleStatus.ACTIVE)
+                    .customMetadata(metadata)
+                    .build();
+
+            metadataRepository.save(merkleMetadata);
+            merkleCreated = true;
+
+            log.info("Created merkle: {} (scheme: {})", merkleIdentifier, scheme);
+        } else if (!exists) {
+            throw new MerkleNotFoundException(merkleIdentifier);
+        }
+
+        // Create IngestRequest and delegate to existing method
+        IngestRequest ingestRequest = new IngestRequest();
+        ingestRequest.setProvider(request.getProvider());
+        ingestRequest.setConfig(request.getConfig());
+
+        IngestResponse ingestResponse = ingestData(merkleIdentifier, ingestRequest);
+
+        long duration = System.currentTimeMillis() - startTime;
+
+        log.info("Completed provider ingestion for merkle {}: {} records processed, {} skipped in {}ms",
+                merkleIdentifier, ingestResponse.getRecordsProcessed(),
+                ingestResponse.getRecordsSkipped(), duration);
+
+        return ProviderIngestResponse.builder()
+                .merkleIdentifier(merkleIdentifier)
+                .merkleCreated(merkleCreated)
+                .provider(request.getProvider())
+                .recordsProcessed(ingestResponse.getRecordsProcessed())
+                .recordsSkipped(ingestResponse.getRecordsSkipped())
+                .rootHash(ingestResponse.getRootHash())
+                .durationMs(duration)
+                .errors(ingestResponse.getErrors())
                 .build();
     }
 }

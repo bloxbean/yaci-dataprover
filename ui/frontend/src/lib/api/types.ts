@@ -170,3 +170,117 @@ export class ApiError extends Error {
 		this.fieldErrors = fieldErrors;
 	}
 }
+
+// Provider types
+export type ProviderStatus = 'AVAILABLE' | 'NOT_CONFIGURED' | 'ERROR';
+
+export type FieldType = 'STRING' | 'INTEGER' | 'NUMBER' | 'BOOLEAN' | 'SELECT' | 'PASSWORD';
+
+export interface SelectOption {
+	value: string;
+	label: string;
+}
+
+export interface FieldValidation {
+	min?: number;
+	max?: number;
+	pattern?: string;
+	minLength?: number;
+	maxLength?: number;
+}
+
+export interface ConfigField {
+	name: string;
+	label: string;
+	type: FieldType;
+	required: boolean;
+	description?: string;
+	placeholder?: string;
+	defaultValue?: unknown;
+	validation?: FieldValidation;
+	options?: SelectOption[];
+}
+
+export interface ConfigSchema {
+	fields: ConfigField[];
+}
+
+export interface ConnectionConfigSchema {
+	fields: ConfigField[];
+}
+
+export interface KeySerializationSchema {
+	keyFieldName: string;
+	keyFieldLabel: string;
+	keyFieldType?: string;
+	keyFieldPlaceholder?: string;
+	keyDescription?: string;
+}
+
+export interface ProviderInfo {
+	name: string;
+	description: string;
+	dataType: string;
+	status: ProviderStatus;
+	statusMessage?: string;
+	configSchema?: ConfigSchema;
+	connectionConfigSchema?: ConnectionConfigSchema;
+	keySerializationSchema?: KeySerializationSchema;
+	currentConnectionConfig?: Record<string, unknown>;
+	configSource?: 'UI' | 'ENV';
+}
+
+export interface ProviderListResponse {
+	providers: ProviderInfo[];
+}
+
+export interface SerializeKeyRequest {
+	key: string;
+}
+
+export interface SerializeKeyResponse {
+	originalKey: string;
+	serializedKeyHex: string;
+	keyLength: number;
+}
+
+export interface ProviderIngestRequest {
+	merkleName: string;
+	createIfNotExists: boolean;
+	merkleScheme?: string;
+	merkleDescription?: string;
+	provider: string;
+	config: Record<string, unknown>;
+}
+
+export interface ProviderIngestResponse {
+	merkleIdentifier: string;
+	merkleCreated: boolean;
+	provider: string;
+	recordsProcessed: number;
+	recordsSkipped: number;
+	rootHash: string;
+	durationMs: number;
+	errors?: string[];
+}
+
+// Provider configuration types
+export interface ProviderConfigRequest {
+	config: Record<string, unknown>;
+}
+
+export interface ProviderConfigResponse {
+	providerName: string;
+	config: Record<string, unknown>;
+	source: 'UI' | 'ENV';
+	schema?: ConnectionConfigSchema;
+}
+
+export interface ConfigTestRequest {
+	config: Record<string, unknown>;
+}
+
+export interface ConfigTestResponse {
+	success: boolean;
+	message: string;
+}

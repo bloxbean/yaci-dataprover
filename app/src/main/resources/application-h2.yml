@@ -16,6 +16,8 @@ spring:
       path: /h2-console
 
 dataprover:
+  ui:
+    enabled: true
   storage:
     rocksdb-path: ./data/rocksdb
     cache-size-mb: 128

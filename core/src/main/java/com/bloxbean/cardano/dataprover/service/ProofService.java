@@ -36,6 +36,16 @@ public class ProofService {
         this.proofUtils = proofUtils;
     }
 
+    /**
+     * Strip 0x prefix from hex string if present.
+     */
+    private String stripHexPrefix(String hex) {
+        if (hex != null && hex.startsWith("0x")) {
+            return hex.substring(2);
+        }
+        return hex;
+    }
+
     public ProofGenerationResponse generateProof(String merkleIdentifier, ProofGenerationRequest request) {
         log.debug("Generating proof for key {} in merkle {}", request.getKey(), merkleIdentifier);
 
@@ -45,7 +55,7 @@ public class ProofService {
         }
 
         try {
-            byte[] keyBytes = HEX.parseHex(request.getKey());
+            byte[] keyBytes = HEX.parseHex(stripHexPrefix(request.getKey()));
 
             Optional<byte[]> proofOpt = merkle.getProofWire(keyBytes);
             if (proofOpt.isEmpty()) {
@@ -126,10 +136,10 @@ public class ProofService {
         }
 
         try {
-            byte[] keyBytes = HEX.parseHex(request.getKey());
-            byte[] proofBytes = HEX.parseHex(request.getProof());
-            byte[] valueBytes = request.getValue() != null ? HEX.parseHex(request.getValue()) : null;
-            byte[] rootHashBytes = HEX.parseHex(request.getRootHash());
+            byte[] keyBytes = HEX.parseHex(stripHexPrefix(request.getKey()));
+            byte[] proofBytes = HEX.parseHex(stripHexPrefix(request.getProof()));
+            byte[] valueBytes = request.getValue() != null ? HEX.parseHex(stripHexPrefix(request.getValue())) : null;
+            byte[] rootHashBytes = HEX.parseHex(stripHexPrefix(request.getRootHash()));
 
             boolean expectedPresence = valueBytes != null;
             Optional<byte[]> proofOpt = Optional.of(proofBytes);
@@ -191,7 +201,7 @@ public class ProofService {
 
         try {
             String normalizedKey = normalizeHexKey(hexKey);
-            byte[] keyBytes = HEX.parseHex(normalizedKey);
+            byte[] keyBytes = HEX.parseHex(stripHexPrefix(normalizedKey));
 
             Optional<byte[]> valueOpt = merkle.get(keyBytes);
 

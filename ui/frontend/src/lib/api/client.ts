@@ -43,6 +43,18 @@ export async function apiPost<T>(endpoint: string, data?: unknown): Promise<T> {
 	return handleResponse<T>(response);
 }
 
+export async function apiPut<T>(endpoint: string, data?: unknown): Promise<T> {
+	const response = await fetch(`${API_BASE}${endpoint}`, {
+		method: 'PUT',
+		headers: {
+			'Content-Type': 'application/json',
+			Accept: 'application/json'
+		},
+		body: data ? JSON.stringify(data) : undefined
+	});
+	return handleResponse<T>(response);
+}
+
 export async function apiDelete<T = void>(endpoint: string): Promise<T> {
 	const response = await fetch(`${API_BASE}${endpoint}`, {
 		method: 'DELETE',

@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { Header, Card, Button, Input, Textarea, Select, Alert, Badge } from '$lib/components';
-	import { merkleApi, proofApi, type MerkleResponse, ApiError } from '$lib/api';
+	import { Header, Card, Button, Input, Textarea, Select, Alert, Badge, KeySerializer } from '$lib/components';
+	import { merkleApi, proofApi, providerApi, type MerkleResponse, type ProviderInfo, ApiError } from '$lib/api';
 
 	let merkles: MerkleResponse[] = $state([]);
+	let providers: ProviderInfo[] = $state([]);
 	let loading = $state(true);
 
 	// Generate proof state
@@ -31,7 +32,7 @@
 	let verifyError: string | null = $state(null);
 
 	onMount(async () => {
-		await loadMerkles();
+		await Promise.all([loadMerkles(), loadProviders()]);
 	});
 
 	async function loadMerkles() {
@@ -44,6 +45,19 @@
 		} finally {
 			loading = false;
 		}
+	}
+
+	async function loadProviders() {
+		try {
+			const result = await providerApi.list();
+			providers = result.providers;
+		} catch (e) {
+			console.error('Failed to load providers', e);
+		}
+	}
+
+	function handleUseSerializedKey(hexKey: string) {
+		proofKey = hexKey;
 	}
 
 	async function handleGenerateProof() {
@@ -124,6 +138,13 @@
 		<div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
 	</div>
 {:else}
+	<!-- Key Serialization Utility -->
+	{#if providers.length > 0}
+		<div class="mb-6">
+			<KeySerializer {providers} onUseKey={handleUseSerializedKey} />
+		</div>
+	{/if}
+
 	<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 		<!-- Generate Proof -->
 		<Card title="Generate Proof">

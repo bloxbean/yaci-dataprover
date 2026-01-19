@@ -88,11 +88,11 @@ java -jar app/build/libs/yaci-dataprover-*.jar --spring.profiles.active=h2 --ui
 Set environment variables for database connection:
 
 ```bash
-export DB_HOST=localhost
-export DB_PORT=5432
-export DB_NAME=dataprover
-export DB_USER=postgres
-export DB_PASSWORD=postgres
+export DP_DB_HOST=localhost
+export DP_DB_PORT=5432
+export DP_DB_NAME=dataprover
+export DP_DB_USER=postgres
+export DP_DB_PASSWORD=postgres
 
 java -jar app/build/libs/yaci-dataprover-*.jar
 ```
@@ -145,17 +145,63 @@ http://localhost:9090/ui
 
 ## Configuration
 
-| Environment Variable    | Description              | Default          |
-|-------------------------|--------------------------|------------------|
-| `DP_DB_HOST`            | PostgreSQL host          | `localhost`      |
-| `DP_DB_PORT`            | PostgreSQL port          | `5432`           |
-| `DP_DB_NAME`            | Database name            | `dataprover`     |
-| `DP_DB_USER`            | Database username        | `postgres`       |
-| `DP_DB_PASSWORD`        | Database password        | `postgres`       |
-| `DP_DB_SCHEMA`          | Database schema          | `public`         |
-| `ROCKSDB_PATH`          | Path for RocksDB storage | `./data/rocksdb` |
-| `PLUGINS_PATH`          | Path for plugin JARs     | `./plugins`      |
-| `DATAPROVER_UI_ENABLED` | Enable Admin UI          | `false`          |
+| Environment Variable         | Description                      | Default          |
+|------------------------------|----------------------------------|------------------|
+| `DP_DB_HOST`                 | PostgreSQL host                  | `localhost`      |
+| `DP_DB_PORT`                 | PostgreSQL port                  | `5432`           |
+| `DP_DB_NAME`                 | Database name                    | `dataprover`     |
+| `DP_DB_USER`                 | Database username                | `postgres`       |
+| `DP_DB_PASSWORD`             | Database password                | `postgres`       |
+| `DP_DB_SCHEMA`               | Database schema                  | `public`         |
+| `ROCKSDB_PATH`               | Path for RocksDB storage         | `./data/rocksdb` |
+| `PLUGINS_PATH`               | Path for plugin JARs             | `./plugins`      |
+| `DATAPROVER_UI_ENABLED`      | Enable Admin UI                  | `false`          |
+| `DATAPROVER_ENCRYPTION_KEY`  | AES-256 key for sensitive config | (none)           |
+
+### Encryption Key (Optional)
+
+The encryption key is used to encrypt sensitive information in provider configurations, such as database passwords and API keys. This is **optional** - if not set, provider configurations with sensitive fields cannot be saved.
+
+**When do you need it?**
+
+- Only if you're using data providers that require sensitive configuration (e.g., database credentials, API keys)
+- Not required for basic merkle operations or providers without sensitive config
+
+**Generate a Key**
+
+Use the built-in key generator to create a secure AES-256 key:
+
+```bash
+# With Java
+java -jar app/build/libs/yaci-dataprover-*.jar --generate-key
+
+# With Docker
+docker run --rm yaci-dataprover:latest --generate-key
+```
+
+Output:
+```
+============================================
+AES-256 Encryption Key (base64):
+K7gNU3sdo+OL0wNhqoVWhr3g6s1xYv72ol/pe/Unols=
+
+Set this as an environment variable:
+  export DATAPROVER_ENCRYPTION_KEY=K7gNU3sdo+OL0wNhqoVWhr3g6s1xYv72ol/pe/Unols=
+============================================
+```
+
+**Set the Key**
+
+```bash
+# Linux/macOS
+export DATAPROVER_ENCRYPTION_KEY=<your-generated-key>
+
+# Or in docker-compose.yml
+environment:
+  DATAPROVER_ENCRYPTION_KEY: "<your-generated-key>"
+```
+
+**Important:** Store this key securely. If the key is lost, encrypted provider configurations cannot be decrypted.
 
 ## API Reference
 

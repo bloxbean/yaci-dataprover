@@ -2,13 +2,13 @@ package com.bloxbean.cardano.dataprover.providers.epochstake;
 
 import com.bloxbean.cardano.dataprover.exception.DataProviderException;
 import com.bloxbean.cardano.dataprover.exception.SerializationException;
-import com.bloxbean.cardano.dataprover.service.provider.AbstractDataProvider;
-import com.bloxbean.cardano.dataprover.service.provider.ValidationResult;
+import com.bloxbean.cardano.dataprover.service.provider.*;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -63,6 +63,8 @@ public class EpochStakeDataProvider extends AbstractDataProvider<EpochStake> {
         hikariConfig.setMinimumIdle(1);
         hikariConfig.setPoolName("EpochStakePool");
 
+        System.out.println("JDBC URL: " + jdbcUrl);
+        System.out.println("Username: " + username);
         this.dataSource = new HikariDataSource(hikariConfig);
 
         log.info("EpochStakeDataProvider initialized with JDBC datasource");
@@ -194,5 +196,144 @@ public class EpochStakeDataProvider extends AbstractDataProvider<EpochStake> {
     @Override
     public Class<EpochStake> getDataType() {
         return EpochStake.class;
+    }
+
+    @Override
+    public ProviderMetadata getMetadata() {
+        ProviderStatus status = dataSource != null
+                ? ProviderStatus.AVAILABLE
+                : ProviderStatus.NOT_CONFIGURED;
+
+        String statusMessage = dataSource != null
+                ? null
+                : "Database connection not configured. Configure JDBC URL, username, and password.";
+
+        return ProviderMetadata.builder()
+                .name(getName())
+                .description(getDescription())
+                .dataType(getDataType().getSimpleName())
+                .status(status)
+                .statusMessage(statusMessage)
+                .configSchema(ConfigSchema.builder()
+                        .fields(List.of(
+                                ConfigField.builder()
+                                        .name("epoch")
+                                        .label("Epoch Number")
+                                        .type(FieldType.INTEGER)
+                                        .required(true)
+                                        .description("The Cardano epoch to fetch stake distribution for")
+                                        .placeholder("e.g., 425")
+                                        .validation(FieldValidation.builder().min(0).build())
+                                        .build()
+                        ))
+                        .build())
+                .connectionConfigSchema(getConnectionConfigSchema())
+                .keySerializationSchema(KeySerializationSchema.builder()
+                        .keyFieldName("address")
+                        .keyFieldLabel("Stake Address")
+                        .keyFieldType("string")
+                        .keyFieldPlaceholder("stake1u8yk3dcuj8yylwvnzz953yups6mmuvt0vtjmxl2gmgceqjqz2yfd2")
+                        .keyDescription("Bech32-encoded Cardano stake address (starts with 'stake1')")
+                        .build())
+                .build();
+    }
+
+    @Override
+    public byte[] serializeKeyFromInput(String keyInput) throws SerializationException {
+        if (keyInput == null || keyInput.isBlank()) {
+            throw new SerializationException("Stake address cannot be empty");
+        }
+
+        try {
+            return AddressConverter.stakeAddressToCredentialHash(keyInput.trim());
+        } catch (Exception e) {
+            log.error("Failed to serialize key from input: {}", keyInput, e);
+            throw new SerializationException(
+                    "Failed to convert stake address to credential hash: " + keyInput, e);
+        }
+    }
+
+    @Override
+    public ConnectionConfigSchema getConnectionConfigSchema() {
+        return ConnectionConfigSchema.builder()
+                .fields(List.of(
+                        ConfigField.builder()
+                                .name("jdbc-url")
+                                .label("JDBC URL")
+                                .type(FieldType.STRING)
+                                .required(true)
+                                .description("PostgreSQL connection URL for Yaci Store database (jdbc:postgresql://localhost:5432/yaci?currentSchema=public)")
+                                .placeholder("jdbc:postgresql://localhost:5432/yaci?currentSchema=public")
+                                .build(),
+                        ConfigField.builder()
+                                .name("username")
+                                .label("Username")
+                                .type(FieldType.STRING)
+                                .required(true)
+                                .description("Database username")
+                                .build(),
+                        ConfigField.builder()
+                                .name("password")
+                                .label("Password")
+                                .type(FieldType.PASSWORD)
+                                .required(true)
+                                .description("Database password")
+                                .build()
+                ))
+                .build();
+    }
+
+    @Override
+    public boolean reconfigure(Map<String, Object> config) {
+        log.info("Reconfiguring EpochStakeDataProvider");
+
+        // Close existing datasource
+        if (dataSource instanceof HikariDataSource hds) {
+            try {
+                hds.close();
+                log.info("Closed existing datasource");
+            } catch (Exception e) {
+                log.warn("Error closing existing datasource", e);
+            }
+        }
+
+        // Reset datasource
+        dataSource = null;
+
+        // Re-initialize with new config
+        initialize(config);
+
+        return dataSource != null;
+    }
+
+    @Override
+    public ConfigTestResult testConfiguration(Map<String, Object> config) {
+        String jdbcUrl = (String) config.get("jdbc-url");
+        String username = (String) config.get("username");
+        String password = (String) config.get("password");
+
+        if (jdbcUrl == null || jdbcUrl.isBlank()) {
+            return ConfigTestResult.failure("JDBC URL is required");
+        }
+
+        try (Connection conn = DriverManager.getConnection(jdbcUrl, username, password)) {
+            // Test that we can query the epoch_stake table
+            try (PreparedStatement stmt = conn.prepareStatement(
+                    "SELECT EXISTS(SELECT 1 FROM epoch_stake LIMIT 1)");
+                 ResultSet rs = stmt.executeQuery()) {
+
+                if (rs.next()) {
+                    return ConfigTestResult.success("Connection successful. epoch_stake table found.");
+                }
+            }
+            return ConfigTestResult.success("Connection successful");
+        } catch (SQLException e) {
+            String message = e.getMessage();
+            if (message.contains("epoch_stake")) {
+                return ConfigTestResult.failure("Connection successful but epoch_stake table not found. " +
+                        "Ensure the database has Yaci Store schema.");
+            }
+            return ConfigTestResult.failure("Connection failed: " + message);
+        }
     }
 }

@@ -99,5 +99,29 @@ public class DataProviderRegistry {
             .collect(Collectors.toList());
     }
 
+    /**
+     * Gets metadata for all registered providers.
+     *
+     * @return list of provider metadata
+     */
+    public List<ProviderMetadata> getAllProviderMetadata() {
+        return providers.values().stream()
+            .map(DataProvider::getMetadata)
+            .sorted(Comparator.comparing(ProviderMetadata::getName))
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Gets metadata for a specific provider.
+     *
+     * @param name the provider name
+     * @return the provider metadata
+     * @throws ProviderNotFoundException if the provider doesn't exist
+     */
+    public ProviderMetadata getProviderMetadata(String name) {
+        DataProvider<?> provider = getProvider(name);
+        return provider.getMetadata();
+    }
+
     public record ProviderInfo(String name, String description, String dataType) {}
 }

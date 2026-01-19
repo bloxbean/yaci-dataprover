@@ -17,6 +17,8 @@ public class SpaController {
             "/ui/dashboard/**",
             "/ui/merkle",
             "/ui/merkle/**",
+            "/ui/providers",
+            "/ui/providers/**",
             "/ui/proofs",
             "/ui/proofs/**",
             "/ui/cache",
