@@ -47,6 +47,13 @@ dataprover:
     auto-archive-threshold: 90
   plugins:
     path: ${DP_PLUGINS_PATH:./plugins}
+    polyglot:
+      enabled: ${DP_POLYGLOT_ENABLED:true}
+      hot-reload: ${DP_POLYGLOT_HOT_RELOAD:false}
+      sandbox:
+        restrict-io: ${DP_POLYGLOT_SANDBOX_RESTRICT_IO:true}
+        allow-native-access: ${DP_POLYGLOT_SANDBOX_ALLOW_NATIVE:false}
+        max-statements: ${DP_POLYGLOT_SANDBOX_MAX_STATEMENTS:10000000}
 #    providers:
 #      epoch-stake:
 #        jdbc-url: jdbc:postgresql://${EPOCH_STAKE_DB_HOST:localhost}:${EPOCH_STAKE_DB_PORT:5432}/${EPOCH_STAKE_DB_NAME:yaci}?currentSchema=${EPOCH_STAKE_DB_SCHEMA:public}

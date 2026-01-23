@@ -3,12 +3,12 @@ export interface MerkleResponse {
 	identifier: string;
 	scheme: string;
 	rootHash: string;
-	recordCount: number;
 	status: MerkleStatus;
 	createdAt: string;
 	lastUpdated: string;
 	description?: string;
 	metadata?: Record<string, unknown>;
+	storeOriginalKeys?: boolean;
 }
 
 export type MerkleStatus = 'ACTIVE' | 'BUILDING' | 'ARCHIVED' | 'DELETED';
@@ -18,6 +18,7 @@ export interface CreateMerkleRequest {
 	scheme?: string;
 	description?: string;
 	metadata?: Record<string, unknown>;
+	storeOriginalKeys?: boolean;
 }
 
 export interface PageResponse<T> {
@@ -80,6 +81,27 @@ export interface ProofVerificationResponse {
 export interface RootHashResponse {
 	merkleIdentifier: string;
 	rootHash: string;
+}
+
+export interface MerkleSizeResponse {
+	merkleIdentifier: string;
+	size: number;
+	computationTimeMs: number;
+}
+
+// Merkle entries types
+export interface MerkleEntryResponse {
+	originalKey: string | null;
+	hashedKey: string;
+	value: string;
+}
+
+export interface MerkleEntriesResponse {
+	merkleIdentifier: string;
+	entries: MerkleEntryResponse[];
+	totalReturned: number;
+	hasMore: boolean;
+	computationTimeMs: number;
 }
 
 // Value lookup types
@@ -249,6 +271,7 @@ export interface ProviderIngestRequest {
 	createIfNotExists: boolean;
 	merkleScheme?: string;
 	merkleDescription?: string;
+	storeOriginalKeys?: boolean;
 	provider: string;
 	config: Record<string, unknown>;
 }

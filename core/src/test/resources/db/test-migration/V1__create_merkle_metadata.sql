@@ -6,12 +6,12 @@ CREATE TABLE merkle_metadata (
     identifier VARCHAR(64) NOT NULL UNIQUE,
     scheme VARCHAR(20) NOT NULL DEFAULT 'mpf',
     root_hash VARCHAR(128),
-    record_count INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     last_updated TIMESTAMP,
     metadata JSON,
     status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
-    version BIGINT DEFAULT 0
+    version BIGINT DEFAULT 0,
+    store_original_keys BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 -- Create indexes for common queries
@@ -28,8 +28,3 @@ CHECK (status IN ('ACTIVE', 'BUILDING', 'ARCHIVED', 'DELETED'));
 ALTER TABLE merkle_metadata
 ADD CONSTRAINT chk_merkle_scheme
 CHECK (scheme IN ('mpf', 'jmt'));
-
--- Add check constraint for non-negative record count
-ALTER TABLE merkle_metadata
-ADD CONSTRAINT chk_record_count
-CHECK (record_count >= 0);

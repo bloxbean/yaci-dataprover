@@ -100,6 +100,7 @@ public class MerkleRegistry {
             .hashFunction("blake2b-256")
             .rootHash(metadata.getRootHash())
             .customConfig(metadata.getMetadata() != null ? metadata.getMetadata() : Map.of())
+            .storeOriginalKeys(metadata.getStoreOriginalKeys() != null && metadata.getStoreOriginalKeys())
             .build();
 
         return merkleFactory.createMerkle(metadata.getScheme(), config);

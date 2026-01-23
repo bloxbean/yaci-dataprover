@@ -4,7 +4,7 @@
 	import { goto } from '$app/navigation';
 	import { base } from '$app/paths';
 	import { Header, Card, Button, Badge, Input, Alert, Modal } from '$lib/components';
-	import { merkleApi, proofApi, type MerkleResponse, type RootHashResponse, ApiError } from '$lib/api';
+	import { merkleApi, proofApi, type MerkleResponse, type RootHashResponse, type MerkleEntriesResponse, ApiError } from '$lib/api';
 
 	const merkleId = $derived($page.params.id);
 
@@ -37,6 +37,17 @@
 	let proofKey = $state('');
 	let proofLoading = $state(false);
 	let proofResult: { key: string; value: string | null; proof: string; rootHash: string } | null = $state(null);
+
+	// Compute size
+	let computedSize: { size: number; computationTimeMs: number } | null = $state(null);
+	let computeSizeLoading = $state(false);
+	let computeSizeError: string | null = $state(null);
+
+	// Entries
+	let entriesData: MerkleEntriesResponse | null = $state(null);
+	let entriesLoading = $state(false);
+	let entriesError: string | null = $state(null);
+	let entriesLimit = $state(100);
 
 	onMount(async () => {
 		await loadMerkle();
@@ -180,8 +191,48 @@
 		}
 	}
 
+	async function handleComputeSize() {
+		computeSizeLoading = true;
+		computeSizeError = null;
+		try {
+			const result = await merkleApi.computeSize(merkleId);
+			computedSize = { size: result.size, computationTimeMs: result.computationTimeMs };
+		} catch (e) {
+			if (e instanceof ApiError) {
+				computeSizeError = e.message;
+			} else {
+				computeSizeError = 'Failed to compute size';
+			}
+		} finally {
+			computeSizeLoading = false;
+		}
+	}
+
 	function copyToClipboard(text: string) {
 		navigator.clipboard.writeText(text);
+	}
+
+	async function handleLoadEntries() {
+		entriesLoading = true;
+		entriesError = null;
+		try {
+			entriesData = await merkleApi.getEntries(merkleId, entriesLimit);
+		} catch (e) {
+			if (e instanceof ApiError) {
+				entriesError = e.message;
+			} else {
+				entriesError = 'Failed to load entries';
+			}
+		} finally {
+			entriesLoading = false;
+		}
+	}
+
+	function truncateHex(hex: string, maxLength: number = 20): string {
+		if (!hex || hex.length <= maxLength) return hex;
+		const start = hex.slice(0, maxLength / 2 + 2);
+		const end = hex.slice(-maxLength / 2);
+		return `${start}...${end}`;
 	}
 </script>
 
@@ -223,8 +274,26 @@
 					<p class="text-white">{merkle.scheme}</p>
 				</div>
 				<div>
-					<span class="text-sm text-gray-400">Records</span>
-					<p class="text-white text-xl font-bold">{merkle.recordCount.toLocaleString()}</p>
+					<span class="text-sm text-gray-400">Tree Size</span>
+					{#if computedSize}
+						<p class="text-white text-xl font-bold">{computedSize.size.toLocaleString()}</p>
+						<p class="text-xs text-gray-500">Computed in {computedSize.computationTimeMs}ms</p>
+					{:else if computeSizeLoading}
+						<div class="flex items-center gap-2 mt-1">
+							<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-500"></div>
+							<span class="text-gray-400 text-sm">Computing...</span>
+						</div>
+					{:else if computeSizeError}
+						<p class="text-red-400 text-sm">{computeSizeError}</p>
+						<Button variant="secondary" size="sm" onclick={handleComputeSize}>
+							Retry
+						</Button>
+					{:else}
+						<Button variant="secondary" size="sm" onclick={handleComputeSize}>
+							Compute Size
+						</Button>
+						<p class="text-xs text-gray-500 mt-1">Traverses tree to count unique entries</p>
+					{/if}
 				</div>
 				<div>
 					<span class="text-sm text-gray-400">Created</span>
@@ -320,6 +389,132 @@
 					</div>
 				{:else}
 					<p class="text-yellow-400">Key not found in merkle tree</p>
+				{/if}
+			</div>
+		{/if}
+	</Card>
+
+	<!-- Entries Section -->
+	<Card title="Tree Entries" class="mt-6">
+		{#if entriesError}
+			<Alert variant="error" dismissible ondismiss={() => entriesError = null}>
+				{entriesError}
+			</Alert>
+		{/if}
+
+		{#if !entriesData && !entriesLoading}
+			<div class="space-y-4">
+				<p class="text-gray-400 text-sm">
+					Load entries from the merkle tree. Limited to a maximum of 1000 entries for performance reasons.
+				</p>
+				<div class="flex items-center gap-4">
+					<div class="flex items-center gap-2">
+						<label class="text-sm text-gray-400">Limit:</label>
+						<select bind:value={entriesLimit} class="input px-3 py-1.5 text-sm">
+							<option value={10}>10</option>
+							<option value={50}>50</option>
+							<option value={100}>100</option>
+							<option value={500}>500</option>
+							<option value={1000}>1000</option>
+						</select>
+					</div>
+					<Button onclick={handleLoadEntries}>
+						<svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+						</svg>
+						Load Entries
+					</Button>
+				</div>
+			</div>
+		{:else if entriesLoading}
+			<div class="flex items-center justify-center h-32">
+				<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+				<span class="ml-3 text-gray-400">Loading entries...</span>
+			</div>
+		{:else if entriesData}
+			<div class="space-y-4">
+				<div class="flex items-center justify-between">
+					<div class="text-sm text-gray-400">
+						Showing {entriesData.totalReturned} entries
+						{#if entriesData.hasMore}
+							<span class="text-yellow-400 ml-1">(tree has more entries)</span>
+						{/if}
+						<span class="text-gray-500 ml-2">- Computed in {entriesData.computationTimeMs}ms</span>
+					</div>
+					<div class="flex items-center gap-2">
+						<select bind:value={entriesLimit} class="input px-3 py-1.5 text-sm">
+							<option value={10}>10</option>
+							<option value={50}>50</option>
+							<option value={100}>100</option>
+							<option value={500}>500</option>
+							<option value={1000}>1000</option>
+						</select>
+						<Button variant="secondary" size="sm" onclick={handleLoadEntries}>
+							Reload
+						</Button>
+					</div>
+				</div>
+
+				{#if entriesData.entries.length === 0}
+					<p class="text-gray-500 text-center py-8">No entries in merkle tree</p>
+				{:else}
+					<div class="overflow-x-auto">
+						<table class="w-full text-sm">
+							<thead>
+								<tr class="border-b border-gray-700">
+									<th class="text-left py-2 px-3 text-gray-400 font-medium">Original Key</th>
+									<th class="text-left py-2 px-3 text-gray-400 font-medium">Hashed Key</th>
+									<th class="text-left py-2 px-3 text-gray-400 font-medium">Value</th>
+								</tr>
+							</thead>
+							<tbody>
+								{#each entriesData.entries as entry}
+									<tr class="border-b border-gray-700/50 hover:bg-gray-700/30">
+										<td class="py-2 px-3">
+											{#if entry.originalKey}
+												<div class="flex items-center gap-1">
+													<code class="text-primary-300 text-xs" title={entry.originalKey}>
+														{truncateHex(entry.originalKey, 24)}
+													</code>
+													<button class="text-gray-500 hover:text-white p-0.5" title="Copy" onclick={() => copyToClipboard(entry.originalKey)}>
+														<svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+															<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+														</svg>
+													</button>
+												</div>
+											{:else}
+												<span class="text-gray-500">-</span>
+											{/if}
+										</td>
+										<td class="py-2 px-3">
+											<div class="flex items-center gap-1">
+												<code class="text-blue-300 text-xs" title={entry.hashedKey}>
+													{truncateHex(entry.hashedKey, 24)}
+												</code>
+												<button class="text-gray-500 hover:text-white p-0.5" title="Copy" onclick={() => copyToClipboard(entry.hashedKey)}>
+													<svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+													</svg>
+												</button>
+											</div>
+										</td>
+										<td class="py-2 px-3">
+											<div class="flex items-center gap-1">
+												<code class="text-green-300 text-xs" title={entry.value}>
+													{truncateHex(entry.value, 32)}
+												</code>
+												<button class="text-gray-500 hover:text-white p-0.5" title="Copy" onclick={() => copyToClipboard(entry.value)}>
+													<svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+													</svg>
+												</button>
+											</div>
+										</td>
+									</tr>
+								{/each}
+							</tbody>
+						</table>
+					</div>
 				{/if}
 			</div>
 		{/if}

@@ -186,7 +186,6 @@
 						<tr>
 							<th class="px-4 py-3 font-medium">Identifier</th>
 							<th class="px-4 py-3 font-medium">Scheme</th>
-							<th class="px-4 py-3 font-medium">Records</th>
 							<th class="px-4 py-3 font-medium">Status</th>
 							<th class="px-4 py-3 font-medium">Created</th>
 						</tr>
@@ -200,7 +199,6 @@
 									</a>
 								</td>
 								<td class="px-4 py-3 text-gray-400">{merkle.scheme}</td>
-								<td class="px-4 py-3 text-gray-400">{formatNumber(merkle.recordCount)}</td>
 								<td class="px-4 py-3">
 									<Badge
 										variant={merkle.status === 'ACTIVE' ? 'success' : merkle.status === 'DELETED' ? 'error' : 'warning'}

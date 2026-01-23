@@ -22,6 +22,8 @@ public class CreateMerkleRequest {
 
     private Map<String, Object> metadata = new HashMap<>();
 
+    private Boolean storeOriginalKeys;
+
     public CreateMerkleRequest() {
     }
 
@@ -55,5 +57,13 @@ public class CreateMerkleRequest {
 
     public void setMetadata(Map<String, Object> metadata) {
         this.metadata = metadata;
+    }
+
+    public Boolean getStoreOriginalKeys() {
+        return storeOriginalKeys;
+    }
+
+    public void setStoreOriginalKeys(Boolean storeOriginalKeys) {
+        this.storeOriginalKeys = storeOriginalKeys;
     }
 }

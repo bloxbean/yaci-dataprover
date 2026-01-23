@@ -45,9 +45,11 @@ public class MpfMerkleProvider implements MerkleProvider {
         );
 
         String rootHash = config.getRootHash();
-        MpfMerkleImplementation merkle = new MpfMerkleImplementation(identifier, nodeStore, rootHash);
+        boolean storeOriginalKeys = config.isStoreOriginalKeys();
+        MpfMerkleImplementation merkle = new MpfMerkleImplementation(identifier, nodeStore, rootHash, storeOriginalKeys);
 
-        log.info("Created MPF merkle: {} (rootHash: {})", identifier, rootHash != null ? "present" : "null");
+        log.info("Created MPF merkle: {} (rootHash: {}, storeOriginalKeys: {})",
+            identifier, rootHash != null ? "present" : "null", storeOriginalKeys);
         return merkle;
     }
 

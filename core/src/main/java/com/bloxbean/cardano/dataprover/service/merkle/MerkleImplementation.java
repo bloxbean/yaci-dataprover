@@ -2,6 +2,7 @@ package com.bloxbean.cardano.dataprover.service.merkle;
 
 import com.bloxbean.cardano.dataprover.exception.MerkleOperationException;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -26,6 +27,18 @@ public interface MerkleImplementation extends AutoCloseable {
     long size();
 
     void commit() throws MerkleOperationException;
+
+    /**
+     * Returns entries from the merkle tree, limited to maxEntries.
+     * @param maxEntries maximum number of entries to return
+     * @return list of entries with key and value
+     */
+    List<Entry> getEntries(int maxEntries) throws MerkleOperationException;
+
+    /**
+     * Represents an entry in the merkle tree.
+     */
+    record Entry(byte[] originalKey, byte[] hashedKey, byte[] value) {}
 
     @Override
     void close();

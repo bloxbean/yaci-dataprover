@@ -91,7 +91,6 @@ class DataProverIntegrationTest {
         assertThat(response.getBody().getIdentifier()).isEqualTo(trieId);
         assertThat(response.getBody().getScheme()).isEqualTo("mpf");
         assertThat(response.getBody().getStatus()).isEqualTo(MerkleStatus.ACTIVE);
-        assertThat(response.getBody().getRecordCount()).isEqualTo(0);
     }
 
     @Test

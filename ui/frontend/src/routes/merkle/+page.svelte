@@ -13,7 +13,7 @@
 
 	// Create modal
 	let showCreateModal = $state(false);
-	let createForm = $state({ identifier: '', scheme: 'mpf', description: '' });
+	let createForm = $state({ identifier: '', scheme: 'mpf', description: '', storeOriginalKeys: false });
 	let createLoading = $state(false);
 	let createError: string | null = $state(null);
 
@@ -58,10 +58,11 @@
 			await merkleApi.create({
 				identifier: createForm.identifier.trim(),
 				scheme: createForm.scheme,
-				description: createForm.description.trim() || undefined
+				description: createForm.description.trim() || undefined,
+				storeOriginalKeys: createForm.storeOriginalKeys
 			});
 			showCreateModal = false;
-			createForm = { identifier: '', scheme: 'mpf', description: '' };
+			createForm = { identifier: '', scheme: 'mpf', description: '', storeOriginalKeys: false };
 			await loadMerkles();
 		} catch (e) {
 			if (e instanceof ApiError) {
@@ -135,7 +136,7 @@
 		</div>
 	{:else if merkles}
 		<Table
-			headers={['Identifier', 'Scheme', 'Records', 'Root Hash', 'Status', 'Created', 'Actions']}
+			headers={['Identifier', 'Scheme', 'Root Hash', 'Status', 'Created', 'Actions']}
 			isEmpty={merkles.content.length === 0}
 			emptyMessage="No merkle trees found"
 		>
@@ -150,7 +151,6 @@
 						{/if}
 					</td>
 					<td class="px-4 py-3 text-gray-400">{merkle.scheme}</td>
-					<td class="px-4 py-3 text-gray-400">{merkle.recordCount.toLocaleString()}</td>
 					<td class="px-4 py-3">
 						{#if merkle.rootHash}
 							<code class="text-xs text-gray-400 bg-gray-700 px-2 py-1 rounded">
@@ -243,6 +243,21 @@
 			placeholder="Optional description"
 			bind:value={createForm.description}
 		/>
+
+		<div class="flex items-center gap-2">
+			<input
+				type="checkbox"
+				id="storeOriginalKeys"
+				bind:checked={createForm.storeOriginalKeys}
+				class="w-4 h-4 rounded border-gray-600 bg-gray-700 text-primary-500 focus:ring-primary-500"
+			/>
+			<label for="storeOriginalKeys" class="text-sm text-gray-300">
+				Store original keys
+			</label>
+		</div>
+		<p class="text-xs text-gray-500 mt-1">
+			Enable to store unhashed keys for debugging. Required to see original keys in entries list.
+		</p>
 	</div>
 
 	{#snippet footer()}

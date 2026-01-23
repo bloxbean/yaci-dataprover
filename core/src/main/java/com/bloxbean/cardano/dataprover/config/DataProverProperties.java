@@ -178,6 +178,7 @@ public class DataProverProperties {
     public static class PluginsProperties {
         private String path = "./plugins";
         private Map<String, Map<String, Object>> providers = new HashMap<>();
+        private PolyglotProperties polyglot = new PolyglotProperties();
 
         public String getPath() {
             return path;
@@ -193,6 +194,74 @@ public class DataProverProperties {
 
         public void setProviders(Map<String, Map<String, Object>> providers) {
             this.providers = providers;
+        }
+
+        public PolyglotProperties getPolyglot() {
+            return polyglot;
+        }
+
+        public void setPolyglot(PolyglotProperties polyglot) {
+            this.polyglot = polyglot;
+        }
+    }
+
+    public static class PolyglotProperties {
+        private boolean enabled = true;
+        private boolean hotReload = false;
+        private SandboxProperties sandbox = new SandboxProperties();
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public boolean isHotReload() {
+            return hotReload;
+        }
+
+        public void setHotReload(boolean hotReload) {
+            this.hotReload = hotReload;
+        }
+
+        public SandboxProperties getSandbox() {
+            return sandbox;
+        }
+
+        public void setSandbox(SandboxProperties sandbox) {
+            this.sandbox = sandbox;
+        }
+    }
+
+    public static class SandboxProperties {
+        private boolean restrictIo = true;
+        private boolean allowNativeAccess = false;
+        private long maxStatements = 10000000L;
+
+        public boolean isRestrictIo() {
+            return restrictIo;
+        }
+
+        public void setRestrictIo(boolean restrictIo) {
+            this.restrictIo = restrictIo;
+        }
+
+        public boolean isAllowNativeAccess() {
+            return allowNativeAccess;
+        }
+
+        public void setAllowNativeAccess(boolean allowNativeAccess) {
+            this.allowNativeAccess = allowNativeAccess;
+        }
+
+        public long getMaxStatements() {
+            return maxStatements;
+        }
+
+        public void setMaxStatements(long maxStatements) {
+            this.maxStatements = maxStatements;
         }
     }
 }

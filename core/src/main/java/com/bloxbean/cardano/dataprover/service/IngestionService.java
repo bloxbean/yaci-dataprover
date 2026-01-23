@@ -64,12 +64,12 @@ public class IngestionService {
 
         IngestResponse response = processData(merkle, provider, request, merkleIdentifier);
 
-        // Update the record count and root hash in the metadata
+        // Update the root hash in the metadata
         if (response.getRecordsProcessed() > 0) {
             MerkleMetadata metadata = metadataRepository.findByIdentifier(merkleIdentifier)
                     .orElseThrow(() -> new MerkleNotFoundException(merkleIdentifier));
-            metadata.incrementRecordCount(response.getRecordsProcessed());
             metadata.setRootHash(response.getRootHash());
+            metadata.touch();
             metadataRepository.save(metadata);
         }
 
@@ -131,7 +131,7 @@ public class IngestionService {
             }
 
             byte[] rootHash = merkle.getRootHash();
-            String rootHashHex = HEX.formatHex(rootHash);
+            String rootHashHex = rootHash != null ? HEX.formatHex(rootHash) : null;
 
             log.info("Ingestion complete. Root hash: {}", rootHashHex);
 
@@ -196,12 +196,12 @@ public class IngestionService {
         byte[] rootHash = merkle.getRootHash();
         String rootHashHex = HEX.formatHex(rootHash);
 
-        // Update the record count and root hash in the metadata
+        // Update the root hash in the metadata
         if (entriesAdded > 0) {
             MerkleMetadata metadata = metadataRepository.findByIdentifier(merkleIdentifier)
                     .orElseThrow(() -> new MerkleNotFoundException(merkleIdentifier));
-            metadata.incrementRecordCount(entriesAdded);
             metadata.setRootHash(rootHashHex);
+            metadata.touch();
             metadataRepository.save(metadata);
         }
 
@@ -243,10 +243,12 @@ public class IngestionService {
             log.info("Creating new merkle: {}", merkleIdentifier);
 
             String scheme = request.getMerkleScheme() != null ? request.getMerkleScheme() : "mpf";
+            boolean storeOriginalKeys = request.getStoreOriginalKeys() != null && request.getStoreOriginalKeys();
 
             MerkleConfiguration config = MerkleConfiguration.builder()
                     .identifier(merkleIdentifier)
                     .scheme(scheme)
+                    .storeOriginalKeys(storeOriginalKeys)
                     .build();
 
             MerkleImplementation merkle = merkleFactory.createMerkle(scheme, config);
@@ -263,6 +265,7 @@ public class IngestionService {
                     .scheme(scheme)
                     .status(MerkleStatus.ACTIVE)
                     .customMetadata(metadata)
+                    .storeOriginalKeys(storeOriginalKeys)
                     .build();
 
             metadataRepository.save(merkleMetadata);

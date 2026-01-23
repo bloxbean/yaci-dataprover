@@ -1,7 +1,9 @@
 package com.bloxbean.cardano.dataprover.controller;
 
 import com.bloxbean.cardano.dataprover.dto.CreateMerkleRequest;
+import com.bloxbean.cardano.dataprover.dto.MerkleEntriesResponse;
 import com.bloxbean.cardano.dataprover.dto.MerkleResponse;
+import com.bloxbean.cardano.dataprover.dto.MerkleSizeResponse;
 import com.bloxbean.cardano.dataprover.model.MerkleStatus;
 import com.bloxbean.cardano.dataprover.service.MerkleManagementService;
 import jakarta.validation.Valid;
@@ -61,5 +63,21 @@ public class MerkleController {
         log.info("Deleting merkle: {}", identifier);
         merkleService.deleteMerkle(identifier);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{identifier}/size")
+    public ResponseEntity<MerkleSizeResponse> computeSize(@PathVariable String identifier) {
+        log.info("Computing size for merkle: {}", identifier);
+        MerkleSizeResponse response = merkleService.computeSize(identifier);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{identifier}/entries")
+    public ResponseEntity<MerkleEntriesResponse> getEntries(
+            @PathVariable String identifier,
+            @RequestParam(defaultValue = "100") int limit) {
+        log.info("Getting entries for merkle: {} (limit: {})", identifier, limit);
+        MerkleEntriesResponse response = merkleService.getEntries(identifier, limit);
+        return ResponseEntity.ok(response);
     }
 }

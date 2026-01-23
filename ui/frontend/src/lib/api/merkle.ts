@@ -6,6 +6,8 @@ import type {
 	AddEntriesRequest,
 	AddEntriesResponse,
 	RootHashResponse,
+	MerkleSizeResponse,
+	MerkleEntriesResponse,
 	ValueLookupResponse,
 	BatchValueLookupRequest,
 	BatchValueLookupResponse,
@@ -49,6 +51,17 @@ export const merkleApi = {
 	 * Get the root hash of a merkle
 	 */
 	getRoot: (id: string) => apiGet<RootHashResponse>(`/merkle/${encodeURIComponent(id)}/root`),
+
+	/**
+	 * Compute the actual size of a merkle tree by traversing it
+	 */
+	computeSize: (id: string) => apiGet<MerkleSizeResponse>(`/merkle/${encodeURIComponent(id)}/size`),
+
+	/**
+	 * Get entries from a merkle tree
+	 */
+	getEntries: (id: string, limit?: number) =>
+		apiGet<MerkleEntriesResponse>(`/merkle/${encodeURIComponent(id)}/entries?limit=${limit || 100}`),
 
 	/**
 	 * Get a single value by key

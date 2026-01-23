@@ -17,6 +17,7 @@
 	// Form state
 	let merkleName = $state('');
 	let createIfNotExists = $state(true);
+	let storeOriginalKeys = $state(false);
 	let config = $state<Record<string, unknown>>({});
 	let errors = $state<Record<string, string>>({});
 
@@ -58,6 +59,7 @@
 				merkleName,
 				createIfNotExists,
 				merkleScheme: 'mpf',
+				storeOriginalKeys: createIfNotExists ? storeOriginalKeys : undefined,
 				provider: provider.name,
 				config
 			});
@@ -72,6 +74,7 @@
 		result = null;
 		error = null;
 		merkleName = '';
+		storeOriginalKeys = false;
 		config = {};
 		errors = {};
 	}
@@ -180,6 +183,21 @@
 				/>
 				<span class="text-sm text-gray-300">Create if doesn't exist</span>
 			</label>
+
+			{#if createIfNotExists}
+				<label class="flex items-center gap-2 ml-6">
+					<input
+						type="checkbox"
+						bind:checked={storeOriginalKeys}
+						disabled={isLoading}
+						class="h-4 w-4 rounded border-gray-600 bg-gray-700 text-primary-600 focus:ring-primary-500"
+					/>
+					<span class="text-sm text-gray-300">Store original keys</span>
+				</label>
+				<p class="text-xs text-gray-500 ml-6">
+					Enable to store unhashed keys for debugging. Required to see original keys in entries list.
+				</p>
+			{/if}
 		</div>
 
 		<!-- Provider Configuration -->
