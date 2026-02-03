@@ -78,6 +78,9 @@ public class PolyglotContext implements AutoCloseable {
         // File access (restricted to provider directory)
         bindings.putMember("file", new FileHelper(providerDir));
 
+        // Plutus data helper (uses CCL for consistent encoding)
+        bindings.putMember("plutus", new PlutusDataHelper());
+
         log.debug("Bound helper objects to polyglot context for provider: {}", providerName);
     }
 

@@ -1,8 +1,8 @@
 package com.bloxbean.cardano.dataprover.service.merkle;
 
 import com.bloxbean.cardano.dataprover.exception.MerkleOperationException;
-import com.bloxbean.cardano.vds.mpt.MpfTrie;
-import com.bloxbean.cardano.vds.mpt.rocksdb.RocksDbNodeStore;
+import com.bloxbean.cardano.vds.mpf.MpfTrie;
+import com.bloxbean.cardano.vds.mpf.rocksdb.RocksDbNodeStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,10 +38,10 @@ public class MpfMerkleImplementation implements MerkleImplementation {
 
         if (rootHashHex != null && !rootHashHex.isBlank()) {
             byte[] rootHash = HEX.parseHex(rootHashHex);
-            this.trie = new MpfTrie(nodeStore, rootHash, storeOriginalKeys);
+            this.trie = new MpfTrie(nodeStore, rootHash);
             log.debug("Created MPF merkle implementation for: {} with existing root hash (storeOriginalKeys: {})", identifier, storeOriginalKeys);
         } else {
-            this.trie = new MpfTrie(nodeStore, null, storeOriginalKeys);
+            this.trie = new MpfTrie(nodeStore, null);
             log.debug("Created MPF merkle implementation for: {} (new trie, storeOriginalKeys: {})", identifier, storeOriginalKeys);
         }
     }
@@ -136,7 +136,7 @@ public class MpfMerkleImplementation implements MerkleImplementation {
         try {
             return trie.getAllEntries().stream()
                 .limit(maxEntries)
-                .map(e -> new Entry(e.getOriginalKey(), e.getKey(), e.getValue()))
+                .map(e -> new Entry(e.getKey(), e.getPath(), e.getValue()))
                 .toList();
         } catch (Exception e) {
             log.error("Failed to get entries for MPF merkle: {}", identifier, e);

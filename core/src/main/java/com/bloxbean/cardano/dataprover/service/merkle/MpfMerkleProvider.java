@@ -1,7 +1,7 @@
 package com.bloxbean.cardano.dataprover.service.merkle;
 
 import com.bloxbean.cardano.dataprover.service.storage.RocksDbManager;
-import com.bloxbean.cardano.vds.mpt.rocksdb.RocksDbNodeStore;
+import com.bloxbean.cardano.vds.mpf.rocksdb.RocksDbNodeStore;
 import org.rocksdb.ColumnFamilyHandle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

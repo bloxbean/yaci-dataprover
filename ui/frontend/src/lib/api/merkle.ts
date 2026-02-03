@@ -11,7 +11,8 @@ import type {
 	ValueLookupResponse,
 	BatchValueLookupRequest,
 	BatchValueLookupResponse,
-	MerkleStatus
+	MerkleStatus,
+	TreeStructureResponse
 } from './types';
 
 export const merkleApi = {
@@ -75,5 +76,16 @@ export const merkleApi = {
 	 * Get multiple values by keys
 	 */
 	getValuesBatch: (id: string, request: BatchValueLookupRequest) =>
-		apiPost<BatchValueLookupResponse>(`/merkle/${encodeURIComponent(id)}/values/batch`, request)
+		apiPost<BatchValueLookupResponse>(`/merkle/${encodeURIComponent(id)}/values/batch`, request),
+
+	/**
+	 * Get tree structure for visualization
+	 */
+	getTreeStructure: (id: string, prefix?: string, maxNodes = 500) => {
+		let url = `/merkle/${encodeURIComponent(id)}/tree?maxNodes=${maxNodes}`;
+		if (prefix) {
+			url += `&prefix=${encodeURIComponent(prefix)}`;
+		}
+		return apiGet<TreeStructureResponse>(url);
+	}
 };

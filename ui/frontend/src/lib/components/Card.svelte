@@ -6,14 +6,15 @@
 		padding?: boolean;
 		collapsible?: boolean;
 		defaultExpanded?: boolean;
+		class?: string;
 		children: Snippet;
 	}
 
-	let { title, padding = true, collapsible = false, defaultExpanded = true, children }: Props = $props();
+	let { title, padding = true, collapsible = false, defaultExpanded = true, class: className = '', children }: Props = $props();
 	let expanded = $state(defaultExpanded);
 </script>
 
-<div class="card">
+<div class="card {className}">
 	{#if title}
 		<div
 			class="px-4 py-3 border-b border-gray-700 {collapsible ? 'cursor-pointer select-none hover:bg-gray-800/50' : ''}"

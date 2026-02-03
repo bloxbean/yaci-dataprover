@@ -172,6 +172,49 @@ export interface StorageInfo {
 	columnFamilyCount: number;
 }
 
+// Tree structure types for MPF trie visualization
+export type TreeNodeType = 'branch' | 'extension' | 'leaf' | 'truncated';
+
+export interface BranchTreeNode {
+	type: 'branch';
+	hash: string;
+	value: string | null;
+	children: Record<string, TreeNode>;
+}
+
+export interface ExtensionTreeNode {
+	type: 'extension';
+	hash: string;
+	path: string;
+	child: TreeNode | null;
+}
+
+export interface LeafTreeNode {
+	type: 'leaf';
+	hash: string;
+	path: string;
+	value: string;
+	originalKey: string | null;
+}
+
+export interface TruncatedTreeNode {
+	type: 'truncated';
+	hash: string;
+	nodeType: string;
+	childCount: number;
+	prefix: string;
+}
+
+export type TreeNode = BranchTreeNode | ExtensionTreeNode | LeafTreeNode | TruncatedTreeNode;
+
+export interface TreeStructureResponse {
+	merkleIdentifier: string;
+	root: TreeNode | null;
+	totalNodes: number;
+	truncated: boolean;
+	computationTimeMs: number;
+}
+
 // Error types
 export interface ErrorResponse {
 	code: string;

@@ -4,6 +4,7 @@ import com.bloxbean.cardano.dataprover.dto.CreateMerkleRequest;
 import com.bloxbean.cardano.dataprover.dto.MerkleEntriesResponse;
 import com.bloxbean.cardano.dataprover.dto.MerkleResponse;
 import com.bloxbean.cardano.dataprover.dto.MerkleSizeResponse;
+import com.bloxbean.cardano.dataprover.dto.TreeStructureResponse;
 import com.bloxbean.cardano.dataprover.model.MerkleStatus;
 import com.bloxbean.cardano.dataprover.service.MerkleManagementService;
 import jakarta.validation.Valid;
@@ -78,6 +79,16 @@ public class MerkleController {
             @RequestParam(defaultValue = "100") int limit) {
         log.info("Getting entries for merkle: {} (limit: {})", identifier, limit);
         MerkleEntriesResponse response = merkleService.getEntries(identifier, limit);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{identifier}/tree")
+    public ResponseEntity<TreeStructureResponse> getTreeStructure(
+            @PathVariable String identifier,
+            @RequestParam(required = false) String prefix,
+            @RequestParam(defaultValue = "500") int maxNodes) {
+        log.info("Getting tree structure for merkle: {} (prefix: {}, maxNodes: {})", identifier, prefix, maxNodes);
+        TreeStructureResponse response = merkleService.getTreeStructure(identifier, prefix, maxNodes);
         return ResponseEntity.ok(response);
     }
 }
