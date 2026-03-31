@@ -41,7 +41,7 @@ public class MpfMerkleImplementation implements MerkleImplementation {
             this.trie = new MpfTrie(nodeStore, rootHash);
             log.debug("Created MPF merkle implementation for: {} with existing root hash (storeOriginalKeys: {})", identifier, storeOriginalKeys);
         } else {
-            this.trie = new MpfTrie(nodeStore, null);
+            this.trie = new MpfTrie(nodeStore);
             log.debug("Created MPF merkle implementation for: {} (new trie, storeOriginalKeys: {})", identifier, storeOriginalKeys);
         }
     }

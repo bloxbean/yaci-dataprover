@@ -28,7 +28,7 @@ class TreeTraversalServiceTest {
     void setUp() throws Exception {
         tempDir = Files.createTempDirectory("trie-test");
         nodeStore = new RocksDbNodeStore(tempDir.toString());
-        trie = new MpfTrie(nodeStore, null);
+        trie = new MpfTrie(nodeStore);
         traversalService = new TreeTraversalService();
     }
 
