@@ -21,3 +21,6 @@ export { default as KeySerializer } from './KeySerializer.svelte';
 export { default as ProviderIngestionForm } from './ProviderIngestionForm.svelte';
 export { default as ProviderKeySerializer } from './ProviderKeySerializer.svelte';
 export { default as ProviderConfigForm } from './ProviderConfigForm.svelte';
+
+// Visualization components
+export { default as TreeVisualization } from './TreeVisualization.svelte';

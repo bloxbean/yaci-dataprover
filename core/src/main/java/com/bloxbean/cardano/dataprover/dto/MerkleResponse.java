@@ -14,12 +14,12 @@ public class MerkleResponse {
     private String identifier;
     private String scheme;
     private String rootHash;
-    private Integer recordCount;
     private MerkleStatus status;
     private Instant createdAt;
     private Instant lastUpdated;
     private String description;
     private Map<String, Object> metadata;
+    private Boolean storeOriginalKeys;
 
     public MerkleResponse() {
     }
@@ -29,11 +29,11 @@ public class MerkleResponse {
         response.setIdentifier(metadata.getIdentifier());
         response.setScheme(metadata.getScheme());
         response.setRootHash(metadata.getRootHash());
-        response.setRecordCount(metadata.getRecordCount());
         response.setStatus(metadata.getStatus());
         response.setCreatedAt(metadata.getCreatedAt());
         response.setLastUpdated(metadata.getLastUpdated());
         response.setMetadata(metadata.getMetadata());
+        response.setStoreOriginalKeys(metadata.getStoreOriginalKeys());
 
         if (metadata.getMetadata() != null && metadata.getMetadata().containsKey("description")) {
             response.setDescription((String) metadata.getMetadata().get("description"));
@@ -64,14 +64,6 @@ public class MerkleResponse {
 
     public void setRootHash(String rootHash) {
         this.rootHash = rootHash;
-    }
-
-    public Integer getRecordCount() {
-        return recordCount;
-    }
-
-    public void setRecordCount(Integer recordCount) {
-        this.recordCount = recordCount;
     }
 
     public MerkleStatus getStatus() {
@@ -112,5 +104,13 @@ public class MerkleResponse {
 
     public void setMetadata(Map<String, Object> metadata) {
         this.metadata = metadata;
+    }
+
+    public Boolean getStoreOriginalKeys() {
+        return storeOriginalKeys;
+    }
+
+    public void setStoreOriginalKeys(Boolean storeOriginalKeys) {
+        this.storeOriginalKeys = storeOriginalKeys;
     }
 }

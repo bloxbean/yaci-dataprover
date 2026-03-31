@@ -1,15 +1,18 @@
 package com.bloxbean.cardano.dataprover.providers.epochstake;
 
+import co.nstant.in.cbor.CborException;
+import com.bloxbean.cardano.client.common.cbor.CborSerializationUtil;
+import com.bloxbean.cardano.client.exception.CborSerializationException;
+import com.bloxbean.cardano.client.plutus.spec.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-
 /**
- * CBOR serialization utilities for stake information.
+ * CBOR serialization utilities for stake information using CCL's PlutusData API.
  * Format: Constr 0 [amount: Integer, pool_key_hash: ByteArray (28 bytes)]
+ * <p>
+ * Uses CCL's standard Plutus encoding (Tag 121 for Constr 0) for consistency
+ * with polyglot providers.
  */
 public class CborSerializer {
 
@@ -27,7 +30,10 @@ public class CborSerializer {
     }
 
     /**
-     * Serializes stake information to CBOR bytes.
+     * Serializes stake information to CBOR bytes using CCL's PlutusData API.
+     * <p>
+     * Format: Constr 0 [amount, pool_key_hash]
+     * Uses Tag 121 encoding (standard Plutus Constr 0).
      */
     public static byte[] serializeStakeInfo(long amount, byte[] poolKeyHash) {
         if (poolKeyHash == null || poolKeyHash.length != 28) {
@@ -36,30 +42,18 @@ public class CborSerializer {
                 (poolKeyHash == null ? "null" : poolKeyHash.length));
         }
 
+        // Use CCL's PlutusData for consistent encoding with polyglot providers
+        ConstrPlutusData stakeInfo = ConstrPlutusData.builder()
+                .alternative(0)
+                .data(ListPlutusData.of(
+                        BigIntPlutusData.of(amount),
+                        BytesPlutusData.of(poolKeyHash)
+                ))
+                .build();
+
         try {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
-            // Tag 102 (Constr 0): 0xD8 0x66
-            baos.write(0xD8);
-            baos.write(0x66);
-
-            // Array of 2 elements: 0x82
-            baos.write(0x82);
-
-            // Element 1: Unsigned integer (8 bytes): 0x1B + 8 bytes big-endian
-            baos.write(0x1B);
-            ByteBuffer buffer = ByteBuffer.allocate(8);
-            buffer.putLong(amount);
-            baos.write(buffer.array());
-
-            // Element 2: Byte string (28 bytes): 0x58 0x1C + data
-            baos.write(0x58);
-            baos.write(0x1C);
-            baos.write(poolKeyHash);
-
-            return baos.toByteArray();
-
-        } catch (IOException e) {
+            return CborSerializationUtil.serialize(stakeInfo.serialize());
+        } catch (CborSerializationException | CborException e) {
             log.error("Failed to serialize StakeInfo: amount={}", amount, e);
             throw new RuntimeException("Failed to serialize StakeInfo", e);
         }

@@ -1,7 +1,7 @@
 package com.bloxbean.cardano.dataprover.util;
 
-import com.bloxbean.cardano.vds.mpt.MpfTrie;
-import com.bloxbean.cardano.vds.mpt.proof.ProofFormatter;
+import com.bloxbean.cardano.vds.mpf.MpfTrie;
+import com.bloxbean.cardano.vds.mpf.proof.ProofFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;

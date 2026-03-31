@@ -14,6 +14,7 @@ public class MerkleConfiguration {
     private String hashFunction;
     private String rootHash;
     private Map<String, Object> customConfig;
+    private boolean storeOriginalKeys;
 
     public MerkleConfiguration() {
         this.customConfig = new HashMap<>();
@@ -71,6 +72,14 @@ public class MerkleConfiguration {
         this.customConfig = customConfig;
     }
 
+    public boolean isStoreOriginalKeys() {
+        return storeOriginalKeys;
+    }
+
+    public void setStoreOriginalKeys(boolean storeOriginalKeys) {
+        this.storeOriginalKeys = storeOriginalKeys;
+    }
+
     public static class Builder {
         private final MerkleConfiguration config = new MerkleConfiguration();
 
@@ -101,6 +110,11 @@ public class MerkleConfiguration {
 
         public Builder customConfig(Map<String, Object> customConfig) {
             config.setCustomConfig(new HashMap<>(customConfig));
+            return this;
+        }
+
+        public Builder storeOriginalKeys(boolean storeOriginalKeys) {
+            config.setStoreOriginalKeys(storeOriginalKeys);
             return this;
         }
 

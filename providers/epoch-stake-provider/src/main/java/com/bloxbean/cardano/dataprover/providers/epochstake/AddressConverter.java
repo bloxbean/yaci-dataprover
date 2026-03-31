@@ -17,14 +17,17 @@ public class AddressConverter {
 
     /**
      * Converts bech32 stake address to 28-byte credential hash.
+     * Uses getDelegationCredentialHash() to return only the hash bytes,
+     * matching the behavior of CardanoHelper for polyglot providers.
      */
     public static byte[] stakeAddressToCredentialHash(String stakeAddressBech32) {
         try {
             Address address = new Address(stakeAddressBech32);
-            return address.getDelegationCredential()
+            // Use getDelegationCredentialHash() to get only the 28-byte hash
+            // This matches CardanoHelper.stakeAddressToCredentialHash() behavior
+            return address.getDelegationCredentialHash()
                 .orElseThrow(() -> new IllegalArgumentException(
-                    "Invalid stake address: " + stakeAddressBech32))
-                .getBytes();
+                    "Invalid stake address: " + stakeAddressBech32));
         } catch (Exception e) {
             log.error("Failed to convert stake address to credential hash: {}",
                      stakeAddressBech32, e);

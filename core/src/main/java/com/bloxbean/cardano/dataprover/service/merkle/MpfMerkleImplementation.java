@@ -1,12 +1,13 @@
 package com.bloxbean.cardano.dataprover.service.merkle;
 
 import com.bloxbean.cardano.dataprover.exception.MerkleOperationException;
-import com.bloxbean.cardano.vds.mpt.MpfTrie;
-import com.bloxbean.cardano.vds.mpt.rocksdb.RocksDbNodeStore;
+import com.bloxbean.cardano.vds.mpf.MpfTrie;
+import com.bloxbean.cardano.vds.mpf.rocksdb.RocksDbNodeStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HexFormat;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -22,20 +23,26 @@ public class MpfMerkleImplementation implements MerkleImplementation {
     private final String identifier;
     private final MpfTrie trie;
     private final RocksDbNodeStore nodeStore;
+    private final boolean storeOriginalKeys;
 
     private long operationCount = 0;
 
     public MpfMerkleImplementation(String identifier, RocksDbNodeStore nodeStore, String rootHashHex) {
+        this(identifier, nodeStore, rootHashHex, false);
+    }
+
+    public MpfMerkleImplementation(String identifier, RocksDbNodeStore nodeStore, String rootHashHex, boolean storeOriginalKeys) {
         this.identifier = identifier;
         this.nodeStore = nodeStore;
+        this.storeOriginalKeys = storeOriginalKeys;
 
         if (rootHashHex != null && !rootHashHex.isBlank()) {
             byte[] rootHash = HEX.parseHex(rootHashHex);
             this.trie = new MpfTrie(nodeStore, rootHash);
-            log.debug("Created MPF merkle implementation for: {} with existing root hash", identifier);
+            log.debug("Created MPF merkle implementation for: {} with existing root hash (storeOriginalKeys: {})", identifier, storeOriginalKeys);
         } else {
             this.trie = new MpfTrie(nodeStore);
-            log.debug("Created MPF merkle implementation for: {} (new trie)", identifier);
+            log.debug("Created MPF merkle implementation for: {} (new trie, storeOriginalKeys: {})", identifier, storeOriginalKeys);
         }
     }
 
@@ -106,7 +113,12 @@ public class MpfMerkleImplementation implements MerkleImplementation {
 
     @Override
     public long size() {
-        return 0;
+        try {
+            return trie.computeSize();
+        } catch (Exception e) {
+            log.error("Failed to compute size for MPF merkle: {}", identifier, e);
+            throw new MerkleOperationException("Failed to compute size", e);
+        }
     }
 
     @Override
@@ -116,6 +128,19 @@ public class MpfMerkleImplementation implements MerkleImplementation {
         } catch (Exception e) {
             log.error("Failed to commit MPF merkle: {}", identifier, e);
             throw new MerkleOperationException("Failed to commit MPF merkle", e);
+        }
+    }
+
+    @Override
+    public List<Entry> getEntries(int maxEntries) throws MerkleOperationException {
+        try {
+            return trie.getAllEntries().stream()
+                .limit(maxEntries)
+                .map(e -> new Entry(e.getKey(), e.getPath(), e.getValue()))
+                .toList();
+        } catch (Exception e) {
+            log.error("Failed to get entries for MPF merkle: {}", identifier, e);
+            throw new MerkleOperationException("Failed to get entries", e);
         }
     }
 
@@ -143,5 +168,9 @@ public class MpfMerkleImplementation implements MerkleImplementation {
 
     public long getOperationCount() {
         return operationCount;
+    }
+
+    public boolean isStoreOriginalKeys() {
+        return storeOriginalKeys;
     }
 }

@@ -22,6 +22,8 @@ public class ProviderIngestRequest {
 
     private String merkleDescription;
 
+    private Boolean storeOriginalKeys;
+
     @NotBlank(message = "Provider name is required")
     private String provider;
 
@@ -60,6 +62,14 @@ public class ProviderIngestRequest {
 
     public void setMerkleDescription(String merkleDescription) {
         this.merkleDescription = merkleDescription;
+    }
+
+    public Boolean getStoreOriginalKeys() {
+        return storeOriginalKeys;
+    }
+
+    public void setStoreOriginalKeys(Boolean storeOriginalKeys) {
+        this.storeOriginalKeys = storeOriginalKeys;
     }
 
     public String getProvider() {

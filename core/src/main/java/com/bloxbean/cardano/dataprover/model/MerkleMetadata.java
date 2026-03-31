@@ -27,9 +27,6 @@ public class MerkleMetadata {
     @Column(name = "root_hash", length = 128)
     private String rootHash;
 
-    @Column(name = "record_count", nullable = false)
-    private Integer recordCount;
-
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -47,9 +44,11 @@ public class MerkleMetadata {
     @Version
     private Long version;
 
+    @Column(name = "store_original_keys", nullable = false)
+    private Boolean storeOriginalKeys = false;
+
     public MerkleMetadata() {
         this.scheme = "mpf";
-        this.recordCount = 0;
         this.status = MerkleStatus.ACTIVE;
         this.createdAt = Instant.now();
         this.metadata = new HashMap<>();
@@ -85,14 +84,6 @@ public class MerkleMetadata {
 
     public void setRootHash(String rootHash) {
         this.rootHash = rootHash;
-    }
-
-    public Integer getRecordCount() {
-        return recordCount;
-    }
-
-    public void setRecordCount(Integer recordCount) {
-        this.recordCount = recordCount;
     }
 
     public Instant getCreatedAt() {
@@ -135,13 +126,16 @@ public class MerkleMetadata {
         this.version = version;
     }
 
-    public void touch() {
-        this.lastUpdated = Instant.now();
+    public Boolean getStoreOriginalKeys() {
+        return storeOriginalKeys;
     }
 
-    public void incrementRecordCount(int delta) {
-        this.recordCount += delta;
-        touch();
+    public void setStoreOriginalKeys(Boolean storeOriginalKeys) {
+        this.storeOriginalKeys = storeOriginalKeys;
+    }
+
+    public void touch() {
+        this.lastUpdated = Instant.now();
     }
 
     public static Builder builder() {
@@ -166,11 +160,6 @@ public class MerkleMetadata {
             return this;
         }
 
-        public Builder recordCount(Integer recordCount) {
-            metadata.setRecordCount(recordCount);
-            return this;
-        }
-
         public Builder status(MerkleStatus status) {
             metadata.setStatus(status);
             return this;
@@ -183,6 +172,11 @@ public class MerkleMetadata {
 
         public Builder addCustomMetadata(String key, Object value) {
             metadata.getMetadata().put(key, value);
+            return this;
+        }
+
+        public Builder storeOriginalKeys(Boolean storeOriginalKeys) {
+            metadata.setStoreOriginalKeys(storeOriginalKeys != null ? storeOriginalKeys : false);
             return this;
         }
 

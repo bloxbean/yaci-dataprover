@@ -3,12 +3,12 @@ export interface MerkleResponse {
 	identifier: string;
 	scheme: string;
 	rootHash: string;
-	recordCount: number;
 	status: MerkleStatus;
 	createdAt: string;
 	lastUpdated: string;
 	description?: string;
 	metadata?: Record<string, unknown>;
+	storeOriginalKeys?: boolean;
 }
 
 export type MerkleStatus = 'ACTIVE' | 'BUILDING' | 'ARCHIVED' | 'DELETED';
@@ -18,6 +18,7 @@ export interface CreateMerkleRequest {
 	scheme?: string;
 	description?: string;
 	metadata?: Record<string, unknown>;
+	storeOriginalKeys?: boolean;
 }
 
 export interface PageResponse<T> {
@@ -80,6 +81,27 @@ export interface ProofVerificationResponse {
 export interface RootHashResponse {
 	merkleIdentifier: string;
 	rootHash: string;
+}
+
+export interface MerkleSizeResponse {
+	merkleIdentifier: string;
+	size: number;
+	computationTimeMs: number;
+}
+
+// Merkle entries types
+export interface MerkleEntryResponse {
+	originalKey: string | null;
+	hashedKey: string;
+	value: string;
+}
+
+export interface MerkleEntriesResponse {
+	merkleIdentifier: string;
+	entries: MerkleEntryResponse[];
+	totalReturned: number;
+	hasMore: boolean;
+	computationTimeMs: number;
 }
 
 // Value lookup types
@@ -148,6 +170,49 @@ export interface StorageInfo {
 	isOpen: boolean;
 	columnFamilies: string[];
 	columnFamilyCount: number;
+}
+
+// Tree structure types for MPF trie visualization
+export type TreeNodeType = 'branch' | 'extension' | 'leaf' | 'truncated';
+
+export interface BranchTreeNode {
+	type: 'branch';
+	hash: string;
+	value: string | null;
+	children: Record<string, TreeNode>;
+}
+
+export interface ExtensionTreeNode {
+	type: 'extension';
+	hash: string;
+	path: string;
+	child: TreeNode | null;
+}
+
+export interface LeafTreeNode {
+	type: 'leaf';
+	hash: string;
+	path: string;
+	value: string;
+	originalKey: string | null;
+}
+
+export interface TruncatedTreeNode {
+	type: 'truncated';
+	hash: string;
+	nodeType: string;
+	childCount: number;
+	prefix: string;
+}
+
+export type TreeNode = BranchTreeNode | ExtensionTreeNode | LeafTreeNode | TruncatedTreeNode;
+
+export interface TreeStructureResponse {
+	merkleIdentifier: string;
+	root: TreeNode | null;
+	totalNodes: number;
+	truncated: boolean;
+	computationTimeMs: number;
 }
 
 // Error types
@@ -249,6 +314,7 @@ export interface ProviderIngestRequest {
 	createIfNotExists: boolean;
 	merkleScheme?: string;
 	merkleDescription?: string;
+	storeOriginalKeys?: boolean;
 	provider: string;
 	config: Record<string, unknown>;
 }

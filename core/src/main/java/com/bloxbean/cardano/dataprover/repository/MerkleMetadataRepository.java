@@ -35,9 +35,6 @@ public interface MerkleMetadataRepository extends JpaRepository<MerkleMetadata, 
 
     long countByStatus(MerkleStatus status);
 
-    @Query("SELECT m FROM MerkleMetadata m WHERE m.recordCount > :minRecordCount ORDER BY m.recordCount DESC")
-    List<MerkleMetadata> findMerkleWithMinRecordCount(@Param("minRecordCount") int minRecordCount);
-
     @Modifying
     @Query("UPDATE MerkleMetadata m SET m.status = 'DELETED', m.lastUpdated = :timestamp WHERE m.identifier = :identifier")
     void softDeleteByIdentifier(@Param("identifier") String identifier, @Param("timestamp") Instant timestamp);

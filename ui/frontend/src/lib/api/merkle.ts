@@ -6,10 +6,13 @@ import type {
 	AddEntriesRequest,
 	AddEntriesResponse,
 	RootHashResponse,
+	MerkleSizeResponse,
+	MerkleEntriesResponse,
 	ValueLookupResponse,
 	BatchValueLookupRequest,
 	BatchValueLookupResponse,
-	MerkleStatus
+	MerkleStatus,
+	TreeStructureResponse
 } from './types';
 
 export const merkleApi = {
@@ -51,6 +54,17 @@ export const merkleApi = {
 	getRoot: (id: string) => apiGet<RootHashResponse>(`/merkle/${encodeURIComponent(id)}/root`),
 
 	/**
+	 * Compute the actual size of a merkle tree by traversing it
+	 */
+	computeSize: (id: string) => apiGet<MerkleSizeResponse>(`/merkle/${encodeURIComponent(id)}/size`),
+
+	/**
+	 * Get entries from a merkle tree
+	 */
+	getEntries: (id: string, limit?: number) =>
+		apiGet<MerkleEntriesResponse>(`/merkle/${encodeURIComponent(id)}/entries?limit=${limit || 100}`),
+
+	/**
 	 * Get a single value by key
 	 */
 	getValue: (id: string, key: string) =>
@@ -62,5 +76,16 @@ export const merkleApi = {
 	 * Get multiple values by keys
 	 */
 	getValuesBatch: (id: string, request: BatchValueLookupRequest) =>
-		apiPost<BatchValueLookupResponse>(`/merkle/${encodeURIComponent(id)}/values/batch`, request)
+		apiPost<BatchValueLookupResponse>(`/merkle/${encodeURIComponent(id)}/values/batch`, request),
+
+	/**
+	 * Get tree structure for visualization
+	 */
+	getTreeStructure: (id: string, prefix?: string, maxNodes = 500) => {
+		let url = `/merkle/${encodeURIComponent(id)}/tree?maxNodes=${maxNodes}`;
+		if (prefix) {
+			url += `&prefix=${encodeURIComponent(prefix)}`;
+		}
+		return apiGet<TreeStructureResponse>(url);
+	}
 };
